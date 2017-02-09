@@ -6,8 +6,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/robvanmieghem/go-opencl/cl"
-	"github.com/robvanmieghem/gominer/mining"
+	"github.com/kilo17/go-opencl/cl"
+	"github.com/kilo17/gominer2/gominer/mining"
 )
 
 var provenSolutions = []struct {
