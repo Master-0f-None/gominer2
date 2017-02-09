@@ -6,9 +6,9 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/kilo17/gominer2/go-opencl/cl"
-	"github.com/kilo17/gominer2/gominer/clients"
-	"github.com/kilo17/gominer2/gominer/mining"
+	"github.com/kilo17/go-opencl/cl"
+	"github.com/kilo17/gominer2/clients"
+	"github.com/kilo17/gominer2/mining"
 )
 
 // Miner actually mines :-)
