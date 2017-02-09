@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/kilo17/go-opencl/cl"
-	"github.com/kilo17/gominer2/gominer/mining"
+	"github.com/kilo17/gominer2/mining"
 )
 
 var provenSolutions = []struct {
