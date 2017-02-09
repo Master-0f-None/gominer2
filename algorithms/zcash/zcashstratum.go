@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/robvanmieghem/gominer/clients"
-	"github.com/robvanmieghem/gominer/clients/stratum"
+	"github.com/kilo17/gominer2/gominer/clients"
+	"github.com/kilo17/gominer2/clients/stratum"
 )
 
 // zcash stratum as defined on https://github.com/str4d/zips/blob/23d74b0373c824dd51c7854c0e3ea22489ba1b76/drafts/str4d-stratum/draft1.rst
