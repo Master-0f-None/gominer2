@@ -3,7 +3,7 @@ package mining
 import (
 	"log"
 
-	"github.com/robvanmieghem/go-opencl/cl"
+	"github.com/kilo17/go-opencl/cl"
 )
 
 //HashRateReport is sent from the mining routines for giving combined information as output
