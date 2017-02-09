@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/kilo17/gominer2/gominer/clients"
+	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/clients/stratum"
 )
 
