@@ -9,10 +9,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/robvanmieghem/go-opencl/cl"
-	"github.com/robvanmieghem/gominer/algorithms/sia"
-	"github.com/robvanmieghem/gominer/algorithms/zcash"
-	"github.com/robvanmieghem/gominer/mining"
+	"github.com/kilo17/go-opencl/cl"
+	"github.com/kilo17/gominer2/algorithms/sia"
+	"github.com/kilo17/gominer2/algorithms/zcash"
+	"github.com/kilo17/gominer2/mining"
 )
 
 //Version is the released version string of gominer
