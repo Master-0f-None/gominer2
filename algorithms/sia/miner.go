@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/kilo17/gominer2/go-opencl/cl"
+	"github.com/kilo17/go-opencl/cl"
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/mining"
 )
