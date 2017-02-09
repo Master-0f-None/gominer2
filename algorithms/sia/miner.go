@@ -4,9 +4,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/robvanmieghem/go-opencl/cl"
-	"github.com/robvanmieghem/gominer/clients"
-	"github.com/robvanmieghem/gominer/mining"
+	"github.com/kilo17/gominer2/go-opencl/cl"
+	"github.com/kilo17/gominer2/clients"
+	"github.com/kilo17/gominer2/mining"
 )
 
 //miningWork is sent to the mining routines and defines what ranges should be searched for a matching nonce
