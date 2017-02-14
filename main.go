@@ -36,7 +36,7 @@ func main() {
 		fmt.Println("gominer version", Version)
 		os.Exit(0)
 	}
-	
+	}
 func GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
 
 	
