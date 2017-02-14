@@ -37,25 +37,7 @@ func main() {
 		os.Exit(0)
 	}
 	
-GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
-	var deviceIds [maxDeviceCount]C.cl_device_id
-	var numDevices C.cl_uint
-	var platformId C.cl_platform_id
-	if platform != nil {
-		platformId = platform.id
-	}
-	if err := C.clGetDeviceIDs(platformId, C.cl_device_type(deviceType), C.cl_uint(maxDeviceCount), &deviceIds[0], &numDevices); err != C.CL_SUCCESS {
-		return nil, toError(err)
-	}
-	if numDevices > maxDeviceCount {
-		numDevices = maxDeviceCount
-	}
-	devices := make([]*Device, numDevices)
-	for i := 0; i < int(numDevices); i++ {
-		devices[i] = &Device{id: deviceIds[i]}
-	}
-	return devices, nil
-}
+	log.Println("Platform", deviceIds())
 	
 	//Filter the excluded devices
 	miningDevices := make(map[int]*cl.Device)
@@ -111,4 +93,22 @@ GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
 
 	}
 }
-
+func GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
+	var deviceIds [maxDeviceCount]C.cl_device_id
+	var numDevices C.cl_uint
+	var platformId C.cl_platform_id
+	if platform != nil {
+		platformId = platform.id
+	}
+	if err := C.clGetDeviceIDs(platformId, C.cl_device_type(deviceType), C.cl_uint(maxDeviceCount), &deviceIds[0], &numDevices); err != C.CL_SUCCESS {
+		return nil, toError(err)
+	}
+	if numDevices > maxDeviceCount {
+		numDevices = maxDeviceCount
+	}
+	devices := make([]*Device, numDevices)
+	for i := 0; i < int(numDevices); i++ {
+		devices[i] = &Device{id: deviceIds[i]}
+	}
+	return devices, nil
+}
