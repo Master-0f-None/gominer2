@@ -36,36 +36,9 @@ func main() {
 		fmt.Println("gominer version", Version)
 		os.Exit(0)
 	}
-
-	if *useCPU {
-		devicesTypesForMining = cl.DeviceTypeAll
-	}
-	globalItemSize := int(math.Exp2(float64(intensity)))
-
-	platforms, err := cl.GetPlatforms()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	clDevices := make([]*cl.Device, 0, 4)
-	for _, platform := range platforms {
-		log.Println("Platform", platform.Name())
-		platormDevices, err := cl.GetDevices(platform, devicesTypesForMining)
-		if err != nil {
-			log.Println(err)
-		}
-		log.Println(len(platormDevices), "device(s) found:")
-		for i, device := range platormDevices {
-			log.Println(i, "-", device.Type(), "-", device.Name())
-			clDevices = append(clDevices, device)
-		}
-	}
-
-	if len(clDevices) == 0 {
-		log.Println("No suitable opencl devices found")
-		os.Exit(1)
-	}
-
+	
+func GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error)
+	
 	//Filter the excluded devices
 	miningDevices := make(map[int]*cl.Device)
 	for i, device := range clDevices {
