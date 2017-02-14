@@ -37,7 +37,7 @@ func main() {
 		os.Exit(0)
 	}
 	
-func GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
+GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
 	var deviceIds [maxDeviceCount]C.cl_device_id
 	var numDevices C.cl_uint
 	var platformId C.cl_platform_id
@@ -56,7 +56,6 @@ func GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
 	}
 	return devices, nil
 }
-
 	
 	//Filter the excluded devices
 	miningDevices := make(map[int]*cl.Device)
@@ -112,5 +111,4 @@ func GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
 
 	}
 }
-
 
