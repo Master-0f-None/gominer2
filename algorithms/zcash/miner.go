@@ -50,8 +50,11 @@ type solst struct {
 
 func numberOfComputeUnits(gpu string) int {
 	if gpu == "rx480" {
-		return 36
 	}
+	if gpu == "Fiji" {
+		return 56
+	}
+
 	log.Panicln("Unknown GPU: ", gpu)
 	return 0
 }
@@ -294,7 +297,7 @@ func sortPair(a, b []uint32) {
 func (miner *singleDeviceMiner) submitSolution(solutions *solst, solutionsFound int, header []byte, target []byte, job interface{}) {
 	for i := 0; i < int(solutions.nr); i++ {
 		if solutions.valid[i] > 0 {
-			log.Println("DEBUG: should submit solution:", solutions.values[i], header, target, job)
+			//log.Println("DEBUG: should submit solution:", solutions.values[i], header, target, job)
 		}
 	}
 
