@@ -36,9 +36,36 @@ func main() {
 		fmt.Println("gominer version", Version)
 		os.Exit(0)
 	}
-	
-	log.Println("Platform", deviceIds())
-	
+
+	if *useCPU {
+		devicesTypesForMining = cl.DeviceTypeAll
+	}
+	globalItemSize := int(math.Exp2(float64(intensity)))
+
+	platforms, err := cl.GetPlatforms()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	clDevices := make([]*cl.Device, 0, 4)
+	for _, platform := range platforms {
+		log.Println("Platform", platform.Name())
+		platormDevices, err := cl.GetDevices(platform, devicesTypesForMining)
+		if err != nil {
+			log.Println(err)
+		}
+		log.Println(len(platormDevices), "device(s) found:")
+		for i, device := range platormDevices {
+			log.Println(i, "-", device.Type(), "-", device.Name())
+			clDevices = append(clDevices, device)
+		}
+	}
+
+	if len(clDevices) == 0 {
+		log.Println("No suitable opencl devices found")
+		os.Exit(1)
+	}
+
 	//Filter the excluded devices
 	miningDevices := make(map[int]*cl.Device)
 	for i, device := range clDevices {
@@ -93,22 +120,14 @@ func main() {
 
 	}
 }
-func GetDevices(platform *Platform, deviceType DeviceType) ([]*Device, error) {
-	var deviceIds [maxDeviceCount]C.cl_device_id
-	var numDevices C.cl_uint
-	var platformId C.cl_platform_id
-	if platform != nil {
-		platformId = platform.id
+
+//deviceExcludedForMining checks if the device is in the exclusion list
+func deviceExcludedForMining(deviceID int, excludedGPUs string) bool {
+	excludedGPUList := strings.Split(excludedGPUs, ",")
+	for _, excludedGPU := range excludedGPUList {
+		if strconv.Itoa(deviceID) == excludedGPU {
+			return true
+		}
 	}
-	if err := C.clGetDeviceIDs(platformId, C.cl_device_type(deviceType), C.cl_uint(maxDeviceCount), &deviceIds[0], &numDevices); err != C.CL_SUCCESS {
-		return nil, toError(err)
-	}
-	if numDevices > maxDeviceCount {
-		numDevices = maxDeviceCount
-	}
-	devices := make([]*Device, numDevices)
-	for i := 0; i < int(numDevices); i++ {
-		devices[i] = &Device{id: deviceIds[i]}
-	}
-	return devices, nil
+	return false
 }
