@@ -50,7 +50,7 @@ func NewClient(connectionstring, pooluser string) (sc clients.Client) {
 	return
 }
 
-//Start connects to the stratumserver and processes the notifications
+//Start connects to the stratum server and processes the notifications
 func (sc *StratumClient) Start() {
 	sc.mutex.Lock()
 	defer func() {
@@ -196,7 +196,7 @@ func (sc *StratumClient) addNewStratumJob(sj stratumJob) {
 	sc.AddJobToDeprecate(sj.JobID)
 }
 
-//GetHeaderForWork fetches new work from the SIA daemon
+//GetHeaderForWork fetches new work
 func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationChannel chan bool, job interface{}, err error) {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
@@ -231,11 +231,22 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 	return
 }
 
+//TODO:  params: [ job_id, nVersion, hashPrevBlock, hashMerkleRoot,
+//TODO:  hashReserved, nTime, nBits, clean_jobs ]
+
+//TODO:   miner.submitSolution(sols, solutionsFound, header, target, job)
+
 //SubmitHeader reports a solved header
-func (sc *StratumClient) SubmitHeader(header []byte, job interface{}) (err error) {
+func (sc *StratumClient) SubmitHeader(sols []byte, job interface{}) (err error){
+//todo: SubmitHeader(header []byte, job interface{}) (err error)
 	sj, _ := job.(stratumJob)
-	//TODO: extract nonce and equihash_solution from the header
-	equihashsolution := "00"
+	log.Println("sols3", sols)
+	log.Println("job3", job)
+	log.Println("/////////////////////////////////////////////////////////////////////////")
+	//TODO: extract nonce and equihash solution from the header
+	//TODO: nonce := hex.EncodeToString(header[32:40])
+
+	equihashsolution := "AAA"
 	encodedExtraNonce2 := hex.EncodeToString(sj.ExtraNonce2.Bytes())
 	nTime := hex.EncodeToString(sj.Time)
 

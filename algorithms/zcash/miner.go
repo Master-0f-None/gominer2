@@ -26,7 +26,7 @@ type singleDeviceMiner struct {
 	Client          clients.Client
 }
 
-//Mine spawns a seperate miner for each device defined in the CLDevices and feeds it with work
+//Mine spawns a separate miner for each device defined in the CLDevices and feeds it with work
 func (m *Miner) Mine() {
 
 	m.Client.Start()
@@ -49,8 +49,8 @@ type solst struct {
 }
 
 func numberOfComputeUnits(gpu string) int {
-	if gpu == "rx480" {
-	}
+	//if gpu == "rx480" {
+	//}
 	if gpu == "Fiji" {
 		return 56
 	}
@@ -64,7 +64,7 @@ func selectWorkSizeBlake() (workSize int) {
 		64 * /* thread per wavefront */
 			blakeWPS * /* wavefront per simd */
 			4 * /* simd per compute unit */
-			numberOfComputeUnits("rx480")
+			numberOfComputeUnits("Fiji")
 	// Make the work group size a multiple of the nr of wavefronts, while
 	// dividing the number of inputs. This results in the worksize being a
 	// power of 2.
@@ -227,7 +227,7 @@ func (miner *singleDeviceMiner) verifySolutions(commandQueue *cl.CommandQueue, b
 	sols := &solst{}
 
 	// Most OpenCL implementations of clEnqueueReadBuffer in blocking mode are
-	// good, except Nvidia implementing it as a wasteful busywait.
+	// good, except Nvidia implementing it as a wasteful busy work.
 	commandQueue.EnqueueReadBuffer(bufferSolutions, true, 0, int(unsafe.Sizeof(*sols)), unsafe.Pointer(sols), nil)
 
 	// let's check these solutions we just read...
@@ -239,9 +239,15 @@ func (miner *singleDeviceMiner) verifySolutions(commandQueue *cl.CommandQueue, b
 		solutionsFound += miner.verifySolution(sols, i)
 	}
 	miner.submitSolution(sols, solutionsFound, header, target, job)
-
+	log.Println("sols", sols)
+	log.Println("solutionsfound", solutionsFound)
+	log.Println("target", target)
+	log.Println("header", header)
+	log.Println("job", job)
 	return
+
 }
+
 
 func (miner *singleDeviceMiner) verifySolution(sols *solst, index int) int {
 	inputs := sols.values[index]
@@ -294,11 +300,16 @@ func sortPair(a, b []uint32) {
 	}
 }
 
-func (miner *singleDeviceMiner) submitSolution(solutions *solst, solutionsFound int, header []byte, target []byte, job interface{}) {
+ func (miner *singleDeviceMiner) submitSolution(solutions *solst, solutionsFound int, header []byte, target []byte, job interface{}) {
 	for i := 0; i < int(solutions.nr); i++ {
-		if solutions.valid[i] > 0 {
-			//log.Println("DEBUG: should submit solution:", solutions.values[i], header, target, job)
+	if solutions.valid[i] > 0 {
+			// log.Println("DEBUG: should submit solution:", solutions.values[i], header, target, job)
+		log.Println("solutionsvalue", solutions.values[i])
+		log.Println("header2", header)
+		log.Println("target2", target)
+		log.Println("job2", job)
+
 		}
-	}
+}
 
 }

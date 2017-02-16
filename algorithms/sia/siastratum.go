@@ -286,6 +286,9 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 //SubmitHeader reports a solution to the stratum server
 func (sc *StratumClient) SubmitHeader(header []byte, job interface{}) (err error) {
 	sj, _ := job.(stratumJob)
+	log.Println("sols3", header)
+	log.Println("job3", job)
+	log.Println("/////////////////////////////////////////////////////////////////////////")
 	nonce := hex.EncodeToString(header[32:40])
 	encodedExtraNonce2 := hex.EncodeToString(sj.ExtraNonce2.Bytes())
 	nTime := hex.EncodeToString(sj.NTime)
