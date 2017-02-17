@@ -40,13 +40,13 @@ type StratumClient struct {
 	currentJob      stratumJob
 	clients.BaseClient
 }
-
 // NewClient creates a new StratumClient given a '[stratum+tcp://]host:port' connectionstring
 func NewClient(connectionstring, pooluser string) (sc clients.Client) {
 	if strings.HasPrefix(connectionstring, "stratum+tcp://") {
 		connectionstring = strings.TrimPrefix(connectionstring, "stratum+tcp://")
 	}
-	sc = &StratumClient{connectionstring: connectionstring, User: pooluser}
+	  sc = &StratumClient{connectionstring: connectionstring, User: pooluser}
+
 	return
 }
 
@@ -234,19 +234,19 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 //TODO:  params: [ job_id, nVersion, hashPrevBlock, hashMerkleRoot,
 //TODO:  hashReserved, nTime, nBits, clean_jobs ]
 
-//TODO:   miner.submitSolution(sols, solutionsFound, header, target, job)
+
 
 //SubmitHeader reports a solved header
-func (sc *StratumClient) SubmitHeader(sols []byte, job interface{}) (err error){
-//todo: SubmitHeader(header []byte, job interface{}) (err error)
+func (sc *StratumClient) SubmitSolutionZEC(sols []byte, solutionsFound int, header []byte, target []byte, job interface{}) (err error){
+	log.Println("/////////////////////////////////////////////////////////////////////////")
+
 	sj, _ := job.(stratumJob)
-	log.Println("sols3", sols)
-	log.Println("job3", job)
+	log.Println("solutions byte", sols)
 	log.Println("/////////////////////////////////////////////////////////////////////////")
 	//TODO: extract nonce and equihash solution from the header
 	//TODO: nonce := hex.EncodeToString(header[32:40])
 
-	equihashsolution := "AAA"
+	equihashsolution := hex.EncodeToString(sols)
 	encodedExtraNonce2 := hex.EncodeToString(sj.ExtraNonce2.Bytes())
 	nTime := hex.EncodeToString(sj.Time)
 

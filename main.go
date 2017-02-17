@@ -4,13 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/kilo17/go-opencl/cl"
-	"github.com/kilo17/gominer2/algorithms/sia"
 	"github.com/kilo17/gominer2/algorithms/zcash"
 	"github.com/kilo17/gominer2/mining"
 )
@@ -40,7 +38,6 @@ func main() {
 	if *useCPU {
 		devicesTypesForMining = cl.DeviceTypeAll
 	}
-	globalItemSize := int(math.Exp2(float64(intensity)))
 
 	platforms, err := cl.GetPlatforms()
 	if err != nil {
@@ -89,16 +86,7 @@ func main() {
 			Client:          c,
 		}
 	} else {
-		log.Println("Starting SIA mining")
-		c := sia.NewClient(*host, *pooluser)
-
-		miner = &sia.Miner{
-			ClDevices:       miningDevices,
-			HashRateReports: hashRateReportsChannel,
-			Intensity:       intensity,
-			GlobalItemSize:  globalItemSize,
-			Client:          c,
-		}
+		log.Println("Also NOT supported")
 	}
 	miner.Mine()
 

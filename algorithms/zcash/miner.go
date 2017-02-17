@@ -47,12 +47,13 @@ type solst struct {
 	valid          [maxSolutions]uint8
 	values         [maxSolutions][(1 << equihashParamK)]uint32
 }
+//todo: changed
 
 func numberOfComputeUnits(gpu string) int {
 	//if gpu == "rx480" {
 	//}
 	if gpu == "Fiji" {
-		return 56
+		return 64
 	}
 
 	log.Panicln("Unknown GPU: ", gpu)
@@ -238,7 +239,7 @@ func (miner *singleDeviceMiner) verifySolutions(commandQueue *cl.CommandQueue, b
 	for i := 0; uint32(i) < sols.nr; i++ {
 		solutionsFound += miner.verifySolution(sols, i)
 	}
-	miner.submitSolution(sols, solutionsFound, header, target, job)
+	miner.SubmitSolutionZEC(sols, solutionsFound, header, target, job)
 	log.Println("sols", sols)
 	log.Println("solutionsfound", solutionsFound)
 	log.Println("target", target)
@@ -276,11 +277,14 @@ func (miner *singleDeviceMiner) verifySolution(sols *solst, index int) int {
 	// sort the pairs in place
 	for level := 0; level < equihashParamK; level++ {
 		for i := 0; i < (1 << equihashParamK); i += (2 << uint(level)) {
+
+	//todo warning for line below - Warning:(280, 4) Variable 'len' collides with builtin function
 			len := 1 << uint(level)
 			sortPair(inputs[i:i+len], inputs[i+len:i+(2*len)])
 		}
 	}
 	return 1
+
 }
 
 func sortPair(a, b []uint32) {
@@ -299,17 +303,21 @@ func sortPair(a, b []uint32) {
 		}
 	}
 }
+//todo: changed
+//todo 				miner.SubmitSolutionZEC(sols, solutionsFound, header, target, job)
 
- func (miner *singleDeviceMiner) submitSolution(solutions *solst, solutionsFound int, header []byte, target []byte, job interface{}) {
-	for i := 0; i < int(solutions.nr); i++ {
-	if solutions.valid[i] > 0 {
+func (miner *singleDeviceMiner) SubmitSolutionZEC(sols *solst, solutionsFound int, header []byte, target []byte, job interface{}) {
+	for i := 0; i < int(sols.nr); i++ {
+		if sols.valid[i] > 0 {
 			// log.Println("DEBUG: should submit solution:", solutions.values[i], header, target, job)
-		log.Println("solutionsvalue", solutions.values[i])
-		log.Println("header2", header)
-		log.Println("target2", target)
-		log.Println("job2", job)
+			log.Println("solutionsvalue", sols.values[i])
+			log.Println("solutions *solst", sols)
+			log.Println("solutionsFound", solutionsFound)
+			log.Println("header2", header)
+			log.Println("target2", target)
+			log.Println("job2", job)
 
 		}
-}
+	}
 
 }
