@@ -5,11 +5,21 @@ import (
 	"log"
 	"time"
 	"unsafe"
-
 	"github.com/kilo17/go-opencl/cl"
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/mining"
+"github.com/kilo17/GoEndian"
+//	"encoding/binary"
+//	"encoding/hex"
+//	"bytes"
+//	"strconv"
+//	"crypto/sha1"
+
+	"encoding/hex"
+	"bytes"
 )
+
+
 
 // Miner actually mines :-)
 type Miner struct {
@@ -41,13 +51,16 @@ func (m *Miner) Mine() {
 	}
 }
 
-type solst struct {
+type Solst struct {
 	nr             uint32
 	likelyInvalids uint32
 	valid          [maxSolutions]uint8
-	values         [maxSolutions][(1 << equihashParamK)]uint32
+	Values         [maxSolutions][(1 << equihashParamK)]uint32
 }
 //todo: changed
+
+
+
 
 func numberOfComputeUnits(gpu string) int {
 	//if gpu == "rx480" {
@@ -142,7 +155,7 @@ func (miner *singleDeviceMiner) mine() {
 	bufferHt[1] = mining.CreateEmptyBuffer(context, cl.MemReadWrite, htSize)
 	defer bufferHt[1].Release()
 
-	bufferSolutions := mining.CreateEmptyBuffer(context, cl.MemReadWrite, int(unsafe.Sizeof(solst{})))
+	bufferSolutions := mining.CreateEmptyBuffer(context, cl.MemReadWrite, int(unsafe.Sizeof(Solst{})))
 	defer bufferSolutions.Release()
 
 	var bufferRowCounters [2]*cl.MemObject
@@ -154,6 +167,12 @@ func (miner *singleDeviceMiner) mine() {
 	for {
 		start := time.Now()
 		target, header, deprecationChannel, job, err := miner.Client.GetHeaderForWork()
+		log.Println("///////////////////////GetHeaderForWork//////////////////////////////////////////////////")
+		log.Println("target", target )
+		log.Println("deprecationChannel", deprecationChannel )
+		log.Println("header", header )
+		log.Println("job", job )
+
 		if err != nil {
 			log.Println("ERROR fetching work -", err)
 			time.Sleep(1000 * time.Millisecond)
@@ -171,6 +190,8 @@ func (miner *singleDeviceMiner) mine() {
 		blake := &blake2b_state_t{}
 		zcash_blake2b_init(blake, zcashHashLength, equihashParamN, equihashParamK)
 		zcash_blake2b_update(blake, header[:128], false)
+		log.Println("header[:128]", header[:128] )
+
 		bufferBlake, err := context.CreateBufferUnsafe(cl.MemReadOnly|cl.MemCopyHostPtr, 64, unsafe.Pointer(&blake.h[0]))
 		if err != nil {
 			log.Panicln(err)
@@ -213,7 +234,9 @@ func (miner *singleDeviceMiner) mine() {
 		globalWorkgroupSize = numberOfRows
 		commandQueue.EnqueueNDRangeKernel(kernelSolutions, nil, []int{globalWorkgroupSize}, []int{localWorkgroupSize}, nil)
 		// read solutions
+
 		solutionsFound := miner.verifySolutions(commandQueue, bufferSolutions, header, target, job)
+
 		bufferBlake.Release()
 		log.Println("Solutions found:", solutionsFound)
 
@@ -223,35 +246,36 @@ func (miner *singleDeviceMiner) mine() {
 
 }
 
+
 func (miner *singleDeviceMiner) verifySolutions(commandQueue *cl.CommandQueue, bufferSolutions *cl.MemObject, header []byte, target []byte, job interface{}) (solutionsFound int) {
 
-	sols := &solst{}
+	Sols := &Solst{}
 
 	// Most OpenCL implementations of clEnqueueReadBuffer in blocking mode are
 	// good, except Nvidia implementing it as a wasteful busy work.
-	commandQueue.EnqueueReadBuffer(bufferSolutions, true, 0, int(unsafe.Sizeof(*sols)), unsafe.Pointer(sols), nil)
+	commandQueue.EnqueueReadBuffer(bufferSolutions, true, 0, int(unsafe.Sizeof(*Sols)), unsafe.Pointer(Sols), nil)
+
 
 	// let's check these solutions we just read...
-	if sols.nr > maxSolutions {
-		log.Printf("ERROR: %d (probably invalid) solutions were dropped!\n", sols.nr-maxSolutions)
-		sols.nr = maxSolutions
+	if Sols.nr > maxSolutions {
+		log.Printf("ERROR: %d (probably invalid) solutions were dropped!\n", Sols.nr-maxSolutions)
+		Sols.nr = maxSolutions
 	}
-	for i := 0; uint32(i) < sols.nr; i++ {
-		solutionsFound += miner.verifySolution(sols, i)
+	for i := 0; uint32(i) < Sols.nr; i++ {
+
+		solutionsFound += miner.verifySolution(Sols, i)
+		log.Println("solutionsFound", solutionsFound)
 	}
-	miner.SubmitSolutionZEC(sols, solutionsFound, header, target, job)
-	log.Println("sols", sols)
-	log.Println("solutionsfound", solutionsFound)
-	log.Println("target", target)
-	log.Println("header", header)
-	log.Println("job", job)
+	miner.SubmitSolution(Sols, solutionsFound, header, target, job)
+
 	return
 
 }
 
 
-func (miner *singleDeviceMiner) verifySolution(sols *solst, index int) int {
-	inputs := sols.values[index]
+func (miner *singleDeviceMiner) verifySolution(sols *Solst, index int) int {
+	inputs := sols.Values[index]
+
 	seenLength := (1 << (prefix + 1)) / 8
 	seen := make([]uint8, seenLength, seenLength)
 	var i uint32
@@ -278,9 +302,10 @@ func (miner *singleDeviceMiner) verifySolution(sols *solst, index int) int {
 	for level := 0; level < equihashParamK; level++ {
 		for i := 0; i < (1 << equihashParamK); i += (2 << uint(level)) {
 
-	//todo warning for line below - Warning:(280, 4) Variable 'len' collides with builtin function
 			len := 1 << uint(level)
 			sortPair(inputs[i:i+len], inputs[i+len:i+(2*len)])
+
+
 		}
 	}
 	return 1
@@ -289,6 +314,8 @@ func (miner *singleDeviceMiner) verifySolution(sols *solst, index int) int {
 
 func sortPair(a, b []uint32) {
 	needSorting := false
+
+
 	var tmp uint32
 	for i := 0; i < len(a); i++ {
 		if needSorting || a[i] > b[i] {
@@ -306,18 +333,58 @@ func sortPair(a, b []uint32) {
 //todo: changed
 //todo 				miner.SubmitSolutionZEC(sols, solutionsFound, header, target, job)
 
-func (miner *singleDeviceMiner) SubmitSolutionZEC(sols *solst, solutionsFound int, header []byte, target []byte, job interface{}) {
-	for i := 0; i < int(sols.nr); i++ {
-		if sols.valid[i] > 0 {
-			// log.Println("DEBUG: should submit solution:", solutions.values[i], header, target, job)
-			log.Println("solutionsvalue", sols.values[i])
-			log.Println("solutions *solst", sols)
-			log.Println("solutionsFound", solutionsFound)
-			log.Println("header2", header)
-			log.Println("target2", target)
-			log.Println("job2", job)
+
+
+
+
+func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound int, header []byte, target []byte, job interface{}) {
+	for i := 0; i < int(Solutions.nr); i++ {
+		if Solutions.valid[i] > 0 {
+		//	log.Println("Solutions", Solutions)
+			fuck := i
+
+
+			log.Println("Solutions.nr", Solutions.nr)
+			log.Println("Solutions.valid", Solutions.valid)
+			log.Println("Solutions.Values", Solutions.Values)
+			log.Println("solutions.values[i]", Solutions.Values[i])
+		//todo	inputFmt := Solutions.Values[0:len(Solutions.Values)-9]
+		//todo	fmt.Println("inputFmt", inputFmt)
+
+
+			var buffer bytes.Buffer
+
+				for i := 0; i < 3; i++ {
+
+
+
+						var iTest uint32 = Solutions.Values[fuck][i]
+					log.Println("iTest", iTest)
+
+					var bTest []byte = make([]byte, 4)
+						endian.Endian.PutUint32(bTest, uint32(iTest)) //byte
+					log.Println("bTest", bTest)
+
+					shit := hex.EncodeToString(bTest)
+					log.Println("shit", shit)
+
+					buffer.WriteString(shit)
+				}
+			s1 := buffer.String()
+			log.Println("s1", s1)
+
+
+
+
+		//	go func() {
+
+		//		if e := miner.Client.SubmitSolution(s1 , solutionsFound, header, target, job); e != nil {
+		//			log.Println(miner.MinerID, "- Error submitting solution -", e)
+		//		}
+		//	}()
+
 
 		}
-	}
 
+	}
 }

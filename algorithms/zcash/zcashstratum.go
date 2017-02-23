@@ -7,9 +7,9 @@ import (
 	"log"
 	"strings"
 	"sync"
-
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/clients/stratum"
+
 )
 
 // zcash stratum as defined on https://github.com/str4d/zips/blob/23d74b0373c824dd51c7854c0e3ea22489ba1b76/drafts/str4d-stratum/draft1.rst
@@ -200,8 +200,9 @@ func (sc *StratumClient) addNewStratumJob(sj stratumJob) {
 func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationChannel chan bool, job interface{}, err error) {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
-
 	job = sc.currentJob
+
+
 	if sc.currentJob.JobID == "" {
 		err = errors.New("No job received from stratum server yet")
 		return
@@ -210,6 +211,9 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 	deprecationChannel = sc.GetDeprecationChannel(sc.currentJob.JobID)
 
 	target = sc.target
+	log.Println("target", target)
+
+
 
 	header = make([]byte, 0, 140)
 	header = append(header, sc.currentJob.Version...)    // 4 bytes
@@ -226,36 +230,56 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 	// Append the 12 `0` bytes
 	for i := 0; i < numberOfZeroBytes; i++ {
 		header = append(header, 0)
+
 	}
 
 	return
 }
 
-//TODO:  params: [ job_id, nVersion, hashPrevBlock, hashMerkleRoot,
-//TODO:  hashReserved, nTime, nBits, clean_jobs ]
-
-
-
-//SubmitHeader reports a solved header
-func (sc *StratumClient) SubmitSolutionZEC(sols []byte, solutionsFound int, header []byte, target []byte, job interface{}) (err error){
-	log.Println("/////////////////////////////////////////////////////////////////////////")
-
-	sj, _ := job.(stratumJob)
-	log.Println("solutions byte", sols)
-	log.Println("/////////////////////////////////////////////////////////////////////////")
+	//SubmitHeader reports a solved header
 	//TODO: extract nonce and equihash solution from the header
 	//TODO: nonce := hex.EncodeToString(header[32:40])
+	//log.Println("/////////////////////////////////////////////////////////////////////////")
 
-	equihashsolution := hex.EncodeToString(sols)
+func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, header []byte, target []byte, job interface{}) (err error){
+	sj, _ := job.(stratumJob)
+	log.Println("//////////////////////SubmitSolutionZEC///////////////////////////////////////////////////")
+	//log.Println("final", final)
+
+	//inputFmt := final[0:len(final)-9]
+	//fmt.Println("inputFmt", inputFmt)
+
+	//inputFmt2 := final[0:len(final)-9]
+	//fmt.Println("inputFmt2", inputFmt2)
+
+	equihashsolution := final
+
+//	equihashsolution := string(final[:])
+//	fmt.Println(len(equihashsolution), equihashsolution)
+
+	//log.Println("equihashsolution", equihashsolution)
 	encodedExtraNonce2 := hex.EncodeToString(sj.ExtraNonce2.Bytes())
+	//log.Println("encodedExtraNonce2", encodedExtraNonce2)
+	log.Println("sj.Time", sj.Time)
+
 	nTime := hex.EncodeToString(sj.Time)
+	log.Println("nTime", nTime)
+
 
 	sc.mutex.Lock()
 	c := sc.stratumclient
 	sc.mutex.Unlock()
-	_, err = c.Call("mining.submit", []string{sc.User, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
+	stratumUser := sc.User
+	log.Println("stratumUser", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
+
+	_, err = c.Call("mining.submit", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
 	if err != nil {
+		log.Println("FUCK FUCK FUCK FUCK", stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution)
 		return
 	}
 	return
 }
+
+
+
+

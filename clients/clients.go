@@ -1,6 +1,7 @@
 //Package clients provides some utilities and common code for specific client implementations
 package clients
 
+
 //todo: changed
 
 //HeaderReporter defines the required method a SIA client or pool client should implement for miners to be able to report solved headers
@@ -9,9 +10,9 @@ package clients
 	//SubmitHeader(header []byte, job interface{}) (err error)
 //}
 //todo: added
-type HeaderReporterZEC interface {
+type HeaderReporter interface {
 	//HeaderReporterZEC reports a solved header
-	SubmitSolutionZEC(sols []byte , solutionsFound int, header []byte, target []byte, job interface{}) (err error)
+	SubmitSolution(final string,  solutionsFound int, header []byte, target []byte, job interface{}) (err error)
 }
 
 
@@ -31,8 +32,8 @@ type DeprecatedJobCall func()
 // Client defines the interface for a client towards a work provider
 type Client interface {
 	HeaderProvider
-	//HeaderReporter
-	HeaderReporterZEC
+	HeaderReporter
+	//HeaderReporterZEC
 	//Start connects to a sia daemon and starts supplying valid headers
 	// It can be empty in case of a "getwork" implementation or maintain a tcp connection in case of stratum for example
 	Start()
