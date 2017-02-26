@@ -8,8 +8,10 @@ import (
 	"github.com/kilo17/go-opencl/cl"
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/mining"
-	"bytes"
-	"encoding/binary"
+//	"bytes"
+//	"encoding/binary"
+
+//	"encoding/hex"
 
 )
 
@@ -338,34 +340,33 @@ func sortPair(a, b []uint32) {
 func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound int, header []byte, target []byte, job interface{}) {
 	for i := 0; i < int(Solutions.nr); i++ {
 		if Solutions.valid[i] > 0 {
+			log.Println("Solutions", Solutions)
 
+			log.Println("Solutions.Values", Solutions.Values)
+			log.Println("solutions.values[i]", Solutions.Values[i])
 			//todo  out		ZCASH_SOL_LEN-byte buffer where the solution will be stored= 1344 uint8_t
 			//todo  inputs		array of 32-bit inputs
 			//todo   n		number of elements in array = 512
 			var inputs = Solutions.Values[i]
-			var byte_pos uint32 = 0           //uint32_t
-			var bits_left uint32 = prefix + 1 //int32_t
-			var x uint32 = 0                  //uint8_t  --works
-			var x_bits_used uint32 = 0        //uint8_t
+			var byte_pos uint32 = 0
+			var bits_left uint32 = prefix + 1
+			var x uint32 = 0
 
+			var num int = 512
+			var x_bits_used uint32 = 0
+			slice := make([]uint32, 515)
 			const MaxUint = ^uint32(0)
-
-
 			for n := 0; n < 512; n++ {
 
 
 			if bits_left >= 8-x_bits_used {
-					log.Println("1111")
 					x |= inputs[byte_pos] >> (bits_left - 8 + x_bits_used)
 					bits_left -= 8 - x_bits_used
 					x_bits_used = 8
-		//			log.Println("x_bits_used", x_bits_used)
+
 				goto Label3
 				}
-	//	Label1:
 			if bits_left > 0 {
-				 log.Println("22222")
-
 				var mask uint32 = ^(MaxUint << (8 - x_bits_used))   // changed -1 to ^0
 				mask = ((^mask) >> bits_left) & mask
 				x |= (inputs[byte_pos] << (8 - x_bits_used - bits_left)) & mask
@@ -375,38 +376,57 @@ func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound 
 				}
 		Label2:
 			 if bits_left <= 0 {
-				 log.Println("33333")
-
-				 //assert(!bits_left)
-				byte_pos++
+				 byte_pos++
 				bits_left = prefix + 1
-				 log.Println("prefix", prefix)
 
-				 log.Println("bits_left", bits_left)
-				 log.Println("x_bits_used", x_bits_used)
 				 goto Label3
 				}
 		Label3:
 			 if  x_bits_used == 8 {
-				 log.Println("44444")
-				 buf := new(bytes.Buffer)
-			//	 z := uint32(515)
-			//	 buf := make([]byte, 4)
-				 binary.Write(buf, binary.LittleEndian, x[n])
-			//	 binary.BigEndian.PutUint32(buf, z)
-			//	 r := binary.BigEndian.Uint32(buf)
-				 data := buf.Bytes()
-				log.Println("xxxxxxxxxxxxxxxxxxxxxxx", data)
+				 slice = append(slice, x)
 				 x = 0
 				 x_bits_used = 0
 
 				}
+
 	}
+			fmt.Printf("len=%d cap=%d slice=%v\n", len(slice), cap(slice), slice)
+			fmt.Println("address of 0th element:", &slice[0])
+
+			Solar(num, slice)
+
 }
 }
 }
-//log.Println("Solutions.nr", Solutions.nr)
-//log.Println("Solutions.valid", Solutions.valid)
-//log.Println("Solutions.Values", Solutions.Values)
-//log.Println("solutions.values[i]", Solutions.Values[i])
+func Solar(num int, slice  []uint32){
+	for i := 0; i < 2 ; i++ {
+		var ttt = len(slice)
+		var arr [1500]uint32
+		copy(arr[:], slice[:ttt])
+	log.Println("400", arr[400])
+		log.Println("700", arr[700])
+		log.Println("900", arr[900])
+		log.Println("1100", arr[1100])
+		log.Println("1500", arr[1450])
+		d := fmt.Sprintf("%x", arr[700])
+		fmt.Printf("Hex conf of '%d' is '%s'\n", i, d)
+		fmt.Println(arr)
+
+		//	fmt.Println(slice[i])
+
+	//	h := fmt.Sprintf("%x", slice[i])
+	//	fmt.Printf("Hex conf of '%d' is '%s'\n", i, h)
+
+
+
+
+
+			}
+		}
+
+
+
+
+
+
 
