@@ -10,6 +10,7 @@ import (
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/clients/stratum"
 
+	"fmt"
 )
 
 // zcash stratum as defined on https://github.com/str4d/zips/blob/23d74b0373c824dd51c7854c0e3ea22489ba1b76/drafts/str4d-stratum/draft1.rst
@@ -211,7 +212,7 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 	deprecationChannel = sc.GetDeprecationChannel(sc.currentJob.JobID)
 
 	target = sc.target
-	log.Println("target", target)
+	//log.Println("target", target)
 
 
 
@@ -243,7 +244,7 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 
 func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, header []byte, target []byte, job interface{}) (err error){
 	sj, _ := job.(stratumJob)
-	log.Println("//////////////////////SubmitSolutionZEC///////////////////////////////////////////////////")
+//	log.Println("//////////////////////SubmitSolutionZEC///////////////////////////////////////////////////")
 	//log.Println("final", final)
 
 	//inputFmt := final[0:len(final)-9]
@@ -255,26 +256,26 @@ func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, header
 	equihashsolution := final
 
 //	equihashsolution := string(final[:])
-//	fmt.Println(len(equihashsolution), equihashsolution)
+	fmt.Println(len(equihashsolution), equihashsolution)
 
 	//log.Println("equihashsolution", equihashsolution)
 	encodedExtraNonce2 := hex.EncodeToString(sj.ExtraNonce2.Bytes())
 	//log.Println("encodedExtraNonce2", encodedExtraNonce2)
-	log.Println("sj.Time", sj.Time)
+	//log.Println("sj.Time", sj.Time)
 
 	nTime := hex.EncodeToString(sj.Time)
-	log.Println("nTime", nTime)
+	//log.Println("nTime", nTime)
 
 
 	sc.mutex.Lock()
 	c := sc.stratumclient
 	sc.mutex.Unlock()
 	stratumUser := sc.User
-	log.Println("stratumUser", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
+	//log.Println("stratumUser", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
 
 	_, err = c.Call("mining.submit", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
 	if err != nil {
-		log.Println("FUCK FUCK FUCK FUCK", stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution)
+	//	log.Println("FUCK FUCK FUCK FUCK", stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution)
 		return
 	}
 	return

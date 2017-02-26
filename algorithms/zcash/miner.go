@@ -8,16 +8,11 @@ import (
 	"github.com/kilo17/go-opencl/cl"
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/mining"
-"github.com/kilo17/GoEndian"
-//	"encoding/binary"
-//	"encoding/hex"
-//	"bytes"
-//	"strconv"
-//	"crypto/sha1"
-
-	"encoding/hex"
 	"bytes"
+	"encoding/binary"
+
 )
+
 
 
 
@@ -167,11 +162,11 @@ func (miner *singleDeviceMiner) mine() {
 	for {
 		start := time.Now()
 		target, header, deprecationChannel, job, err := miner.Client.GetHeaderForWork()
-		log.Println("///////////////////////GetHeaderForWork//////////////////////////////////////////////////")
-		log.Println("target", target )
-		log.Println("deprecationChannel", deprecationChannel )
-		log.Println("header", header )
-		log.Println("job", job )
+	//	log.Println("///////////////////////GetHeaderForWork//////////////////////////////////////////////////")
+	//	log.Println("target", target )
+	//	log.Println("deprecationChannel", deprecationChannel )
+	//	log.Println("header", header )
+	//	log.Println("job", job )
 
 		if err != nil {
 			log.Println("ERROR fetching work -", err)
@@ -190,7 +185,7 @@ func (miner *singleDeviceMiner) mine() {
 		blake := &blake2b_state_t{}
 		zcash_blake2b_init(blake, zcashHashLength, equihashParamN, equihashParamK)
 		zcash_blake2b_update(blake, header[:128], false)
-		log.Println("header[:128]", header[:128] )
+	//	log.Println("header[:128]", header[:128] )
 
 		bufferBlake, err := context.CreateBufferUnsafe(cl.MemReadOnly|cl.MemCopyHostPtr, 64, unsafe.Pointer(&blake.h[0]))
 		if err != nil {
@@ -264,7 +259,10 @@ func (miner *singleDeviceMiner) verifySolutions(commandQueue *cl.CommandQueue, b
 	for i := 0; uint32(i) < Sols.nr; i++ {
 
 		solutionsFound += miner.verifySolution(Sols, i)
-		log.Println("solutionsFound", solutionsFound)
+	//	log.Println("solutionsFound", solutionsFound)
+	//	log.Println("Sols", Sols)
+	//	log.Println("iiiii", i)
+
 	}
 	miner.SubmitSolution(Sols, solutionsFound, header, target, job)
 
@@ -340,51 +338,75 @@ func sortPair(a, b []uint32) {
 func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound int, header []byte, target []byte, job interface{}) {
 	for i := 0; i < int(Solutions.nr); i++ {
 		if Solutions.valid[i] > 0 {
-		//	log.Println("Solutions", Solutions)
-			fuck := i
+
+			//todo  out		ZCASH_SOL_LEN-byte buffer where the solution will be stored= 1344 uint8_t
+			//todo  inputs		array of 32-bit inputs
+			//todo   n		number of elements in array = 512
+			var inputs = Solutions.Values[i]
+			var byte_pos uint32 = 0           //uint32_t
+			var bits_left uint32 = prefix + 1 //int32_t
+			var x uint32 = 0                  //uint8_t  --works
+			var x_bits_used uint32 = 0        //uint8_t
+
+			const MaxUint = ^uint32(0)
 
 
-			log.Println("Solutions.nr", Solutions.nr)
-			log.Println("Solutions.valid", Solutions.valid)
-			log.Println("Solutions.Values", Solutions.Values)
-			log.Println("solutions.values[i]", Solutions.Values[i])
-		//todo	inputFmt := Solutions.Values[0:len(Solutions.Values)-9]
-		//todo	fmt.Println("inputFmt", inputFmt)
+			for n := 0; n < 512; n++ {
 
 
-			var buffer bytes.Buffer
-
-				for i := 0; i < 3; i++ {
-
-
-
-						var iTest uint32 = Solutions.Values[fuck][i]
-					log.Println("iTest", iTest)
-
-					var bTest []byte = make([]byte, 4)
-						endian.Endian.PutUint32(bTest, uint32(iTest)) //byte
-					log.Println("bTest", bTest)
-
-					shit := hex.EncodeToString(bTest)
-					log.Println("shit", shit)
-
-					buffer.WriteString(shit)
+			if bits_left >= 8-x_bits_used {
+					log.Println("1111")
+					x |= inputs[byte_pos] >> (bits_left - 8 + x_bits_used)
+					bits_left -= 8 - x_bits_used
+					x_bits_used = 8
+		//			log.Println("x_bits_used", x_bits_used)
+				goto Label3
 				}
-			s1 := buffer.String()
-			log.Println("s1", s1)
+	//	Label1:
+			if bits_left > 0 {
+				 log.Println("22222")
 
+				var mask uint32 = ^(MaxUint << (8 - x_bits_used))   // changed -1 to ^0
+				mask = ((^mask) >> bits_left) & mask
+				x |= (inputs[byte_pos] << (8 - x_bits_used - bits_left)) & mask
+				x_bits_used += bits_left
+				bits_left = 0
+				goto Label2
+				}
+		Label2:
+			 if bits_left <= 0 {
+				 log.Println("33333")
 
+				 //assert(!bits_left)
+				byte_pos++
+				bits_left = prefix + 1
+				 log.Println("prefix", prefix)
 
+				 log.Println("bits_left", bits_left)
+				 log.Println("x_bits_used", x_bits_used)
+				 goto Label3
+				}
+		Label3:
+			 if  x_bits_used == 8 {
+				 log.Println("44444")
+				 buf := new(bytes.Buffer)
+			//	 z := uint32(515)
+			//	 buf := make([]byte, 4)
+				 binary.Write(buf, binary.LittleEndian, x[n])
+			//	 binary.BigEndian.PutUint32(buf, z)
+			//	 r := binary.BigEndian.Uint32(buf)
+				 data := buf.Bytes()
+				log.Println("xxxxxxxxxxxxxxxxxxxxxxx", data)
+				 x = 0
+				 x_bits_used = 0
 
-		//	go func() {
-
-		//		if e := miner.Client.SubmitSolution(s1 , solutionsFound, header, target, job); e != nil {
-		//			log.Println(miner.MinerID, "- Error submitting solution -", e)
-		//		}
-		//	}()
-
-
-		}
-
+				}
 	}
 }
+}
+}
+//log.Println("Solutions.nr", Solutions.nr)
+//log.Println("Solutions.valid", Solutions.valid)
+//log.Println("Solutions.Values", Solutions.Values)
+//log.Println("solutions.values[i]", Solutions.Values[i])
+

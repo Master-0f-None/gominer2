@@ -1,10 +1,12 @@
 <component name="libraryTable">
   <library name="GOPATH &lt;gominer2&gt;">
     <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../../Go" />
       <root url="file://$PROJECT_DIR$/../.." />
       <root url="file://$PROJECT_DIR$/../../../gopkg.in" />
     </CLASSES>
     <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../../Go" />
       <root url="file://$PROJECT_DIR$/../.." />
       <root url="file://$PROJECT_DIR$/../../../gopkg.in" />
     </SOURCES>
