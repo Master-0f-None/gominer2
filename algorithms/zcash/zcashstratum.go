@@ -244,28 +244,21 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 
 func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, header []byte, target []byte, job interface{}) (err error){
 	sj, _ := job.(stratumJob)
-//	log.Println("//////////////////////SubmitSolutionZEC///////////////////////////////////////////////////")
-	//log.Println("final", final)
 
-	//inputFmt := final[0:len(final)-9]
-	//fmt.Println("inputFmt", inputFmt)
-
-	//inputFmt2 := final[0:len(final)-9]
-	//fmt.Println("inputFmt2", inputFmt2)
 
 	equihashsolution := final
 
-//	equihashsolution := string(final[:])
 	fmt.Println(len(equihashsolution), equihashsolution)
 
-	//log.Println("equihashsolution", equihashsolution)
+	log.Println("equihashsolution", equihashsolution)
 	encodedExtraNonce2 := hex.EncodeToString(sj.ExtraNonce2.Bytes())
-	//log.Println("encodedExtraNonce2", encodedExtraNonce2)
-	//log.Println("sj.Time", sj.Time)
+	log.Println("encodedExtraNonce2", encodedExtraNonce2)
+
+
+
 
 	nTime := hex.EncodeToString(sj.Time)
-	//log.Println("nTime", nTime)
-
+	log.Println("nTime", nTime)
 
 	sc.mutex.Lock()
 	c := sc.stratumclient

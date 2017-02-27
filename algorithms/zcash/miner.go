@@ -334,15 +334,15 @@ func sortPair(a, b []uint32) {
 func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound int, header []byte, target []byte, job interface{}) {
 	for i := 0; i < int(Solutions.nr); i++ {
 		if Solutions.valid[i] > 0 {
-			log.Println("Solutions", Solutions)
+		//	log.Println("Solutions", Solutions)
 
-			log.Println("Solutions.Values", Solutions.Values)
-			log.Println("solutions.values[i]", Solutions.Values[i])
+		//	log.Println("Solutions.Values", Solutions.Values)
+		//	log.Println("solutions.values[i]", Solutions.Values[i])
 			//todo  out		ZCASH_SOL_LEN-byte buffer where the solution will be stored= 1344 uint8_t
 			//todo  inputs		array of 32-bit inputs
 			//todo   n		number of elements in array = 512
 
-			var inputs = Solutions.Values[i]
+			var inputs= Solutions.Values[i]
 
 			var n uint32 = 512
 
@@ -351,12 +351,12 @@ func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound 
 			var x uint32 = 0
 			var x_bits_used uint32 = 0
 			slice := make([]uint32, 0)
-			const MaxUint = ^uint32(0)
+			const MaxUint= ^uint32(0)
 
-			var ggg= 0
-			var ppp= 0
-			var rrr= 0
-			var ttt= 0
+			var ggg = 0
+			var ppp = 0
+			var rrr = 0
+			var ttt = 0
 
 			for ; byte_pos < n; {
 
@@ -391,29 +391,44 @@ func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound 
 			//	log.Println("pppp", ppp)
 			//	log.Println("rrrrrr", rrr)
 			//	log.Println("ttttt", ttt)
-			fmt.Printf("len=%d cap=%d slice=%v\n", len(slice), cap(slice), slice)
-			fmt.Println("address of 0th element:", &slice[0])
+	//		fmt.Printf("len=%d cap=%d slice=%v\n", len(slice), cap(slice), slice)    //todo
+	//		fmt.Println("address of 0th element:", &slice[i])                             //todo
 
-			fmt.Printf("Raw Value Hex %02x\n", slice[i]) //todo
 			//	   fmt.Printf("Raw Value Hex %02x\n", slice[2])                  	//todo
 			//	    fmt.Printf("Raw Value Hex %02x\n", slice[3])            	//todo
-
-			var Extract uint32 = slice[i] //todo
-
-			Extract4th := make([]byte, 4)                        //todo
-			endian.Endian.PutUint32(Extract4th, uint32(Extract)) //todo
-
 			sliceExtract := make([]byte, 0)
-			sliceExtract = append(sliceExtract, Extract4th[0])
-			log.Println("sliceExtract", sliceExtract)
-			//	fmt.Println(sliceExtract)
-			//	  fmt.Printf("sliceExtract Hex %02x\n", sliceExtract[i])
 
-			//	log.Println("sliceExtract", sliceExtract)
-			fmt.Printf("BigEndian Hex-0 %02x\n", Extract4th[0]) //todo
-			//	fmt.Printf("BigEndian Hex-1 %02x\n", Extract4th[1])          	//todo
-			//	 fmt.Printf("BigEndian Hex-2 %02x\n", Extract4th[2])        	//todo
-			//	  fmt.Printf("BigEndian Hex-3 %02x\n", Extract4th[3])        	//todo
+			for v := range slice {
+
+				//	fmt.Printf("Raw Value Hex %02x\n", slice[v]) //todo
+
+				var Extract uint32 = slice[v] //todo
+
+				Extract4th := make([]byte, 4)                        //todo
+				endian.Endian.PutUint32(Extract4th, uint32(Extract)) //todo
+
+				sliceExtract = append(sliceExtract, Extract4th[0])
+
+				//	fmt.Println(sliceExtract)
+				//	  fmt.Printf("sliceExtract Hex %02x\n", sliceExtract[i])
+
+				//	log.Println("sliceExtract", sliceExtract)
+				//	 fmt.Printf("BigEndian Hex-0 %02x\n", Extract4th[0]) //todo
+				//	fmt.Printf("BigEndian Hex-1 %02x\n", Extract4th[1])          	//todo
+				//	 fmt.Printf("BigEndian Hex-2 %02x\n", Extract4th[2])        	//todo
+				//	  fmt.Printf("BigEndian Hex-3 %02x\n", Extract4th[3])        	//todo
+			}
+			//		log.Println("sliceExtract", sliceExtract)
+			//	 fmt.Printf("BigEndian Hex-0 %02x\n", sliceExtract)
+			var Finally= fmt.Sprintf("%02x\n", sliceExtract)
+		//	log.Println("Finally", Finally)
+
+			go func() {
+
+				if e := miner.Client.SubmitSolution(Finally, solutionsFound, header, target, job); e != nil {
+					log.Println(miner.MinerID, "- Error submitting solution -", e)
+				}
+			}()
 
 		}
 	}
