@@ -275,7 +275,7 @@ func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, header
 
 	_, err = c.Call("mining.submit", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
 	if err != nil {
-	//	log.Println("FUCK FUCK FUCK FUCK", stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution)
+		log.Println("FUCK FUCK FUCK FUCK", stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution)
 		return
 	}
 	return

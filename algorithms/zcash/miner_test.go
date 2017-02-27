@@ -83,7 +83,7 @@ type solst1 struct {
 	nr             uint32
 	likelyInvalids uint32
 	valid          [maxSolutions]uint8
-	values         [maxSolutions][(1 << equihashParamK)]uint32
+	values         [maxSolutions][1 << equihashParamK]uint32
 }
 
 func numberOfComputeUnits1(gpu string) int {
@@ -307,7 +307,7 @@ func (miner *singleDeviceMiner) verifySolution(sols *solst, index int) int {
 	sols.valid[index] = 1
 	// sort the pairs in place
 	for level := 0; level < equihashParamK; level++ {
-		for i := 0; i < (1 << equihashParamK); i += (2 << uint(level)) {
+		for i := 0; i < (1 << equihashParamK); i += 2 << uint(level) {
 			len := 1 << uint(level)
 			sortPair(inputs[i:i+len], inputs[i+len:i+(2*len)])
 		}

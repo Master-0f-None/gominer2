@@ -59,13 +59,13 @@ func rotr64(a uint64, bits uint8) uint64 {
 }
 
 func mix(va *uint64, vb *uint64, vc *uint64, vd *uint64, x uint64, y uint64) {
-	*va = (*va + *vb + x)
+	*va = *va + *vb + x
 	*vd = rotr64(*vd^*va, 32)
-	*vc = (*vc + *vd)
+	*vc = *vc + *vd
 	*vb = rotr64(*vb^*vc, 24)
-	*va = (*va + *vb + y)
+	*va = *va + *vb + y
 	*vd = rotr64(*vd^*va, 16)
-	*vc = (*vc + *vd)
+	*vc = *vc + *vd
 	*vb = rotr64(*vb^*vc, 63)
 }
 

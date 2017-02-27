@@ -8,11 +8,8 @@ import (
 	"github.com/kilo17/go-opencl/cl"
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/mining"
-//	"bytes"
-//	"encoding/binary"
-
-//	"encoding/hex"
-
+	"github.com/kilo17/GoEndian"
+//		"encoding/binary"
 )
 
 
@@ -52,7 +49,7 @@ type Solst struct {
 	nr             uint32
 	likelyInvalids uint32
 	valid          [maxSolutions]uint8
-	Values         [maxSolutions][(1 << equihashParamK)]uint32
+	Values         [maxSolutions][1 << equihashParamK]uint32
 }
 //todo: changed
 
@@ -260,7 +257,7 @@ func (miner *singleDeviceMiner) verifySolutions(commandQueue *cl.CommandQueue, b
 	}
 	for i := 0; uint32(i) < Sols.nr; i++ {
 
-		solutionsFound += miner.verifySolution(Sols, i)
+	solutionsFound += miner.verifySolution(Sols, i)
 	//	log.Println("solutionsFound", solutionsFound)
 	//	log.Println("Sols", Sols)
 	//	log.Println("iiiii", i)
@@ -300,7 +297,7 @@ func (miner *singleDeviceMiner) verifySolution(sols *Solst, index int) int {
 	sols.valid[index] = 1
 	// sort the pairs in place
 	for level := 0; level < equihashParamK; level++ {
-		for i := 0; i < (1 << equihashParamK); i += (2 << uint(level)) {
+		for i := 0; i < (1 << equihashParamK); i += 2 << uint(level) {
 
 			len := 1 << uint(level)
 			sortPair(inputs[i:i+len], inputs[i+len:i+(2*len)])
@@ -334,9 +331,6 @@ func sortPair(a, b []uint32) {
 //todo 				miner.SubmitSolutionZEC(sols, solutionsFound, header, target, job)
 
 
-
-
-
 func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound int, header []byte, target []byte, job interface{}) {
 	for i := 0; i < int(Solutions.nr); i++ {
 		if Solutions.valid[i] > 0 {
@@ -347,86 +341,82 @@ func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound 
 			//todo  out		ZCASH_SOL_LEN-byte buffer where the solution will be stored= 1344 uint8_t
 			//todo  inputs		array of 32-bit inputs
 			//todo   n		number of elements in array = 512
+
 			var inputs = Solutions.Values[i]
+
+			var n uint32 = 512
+
 			var byte_pos uint32 = 0
 			var bits_left uint32 = prefix + 1
 			var x uint32 = 0
-
-			var num int = 512
 			var x_bits_used uint32 = 0
-			slice := make([]uint32, 515)
+			slice := make([]uint32, 0)
 			const MaxUint = ^uint32(0)
-			for n := 0; n < 512; n++ {
 
+			var ggg= 0
+			var ppp= 0
+			var rrr= 0
+			var ttt= 0
 
-			if bits_left >= 8-x_bits_used {
+			for ; byte_pos < n; {
+
+				if bits_left >= 8-x_bits_used {
+
+					ggg = ggg + 1
 					x |= inputs[byte_pos] >> (bits_left - 8 + x_bits_used)
 					bits_left -= 8 - x_bits_used
 					x_bits_used = 8
 
-				goto Label3
-				}
-			if bits_left > 0 {
-				var mask uint32 = ^(MaxUint << (8 - x_bits_used))   // changed -1 to ^0
-				mask = ((^mask) >> bits_left) & mask
-				x |= (inputs[byte_pos] << (8 - x_bits_used - bits_left)) & mask
-				x_bits_used += bits_left
-				bits_left = 0
-				goto Label2
-				}
-		Label2:
-			 if bits_left <= 0 {
-				 byte_pos++
-				bits_left = prefix + 1
-
-				 goto Label3
-				}
-		Label3:
-			 if  x_bits_used == 8 {
-				 slice = append(slice, x)
-				 x = 0
-				 x_bits_used = 0
+				} else if bits_left > 0 {
+					ppp = ppp + 1
+					var mask uint32 = ^(MaxUint << (8 - x_bits_used))
+					mask = ((^mask) >> bits_left) & mask
+					x |= (inputs[byte_pos] << (8 - x_bits_used - bits_left)) & mask
+					x_bits_used += bits_left
+					bits_left = 0
+				} else if bits_left <= 0 {
+					rrr = rrr + 1
+					byte_pos++
+					bits_left = prefix + 1
 
 				}
-
-	}
+				if x_bits_used == 8 {
+					ttt = ttt + 1
+					slice = append(slice, x)
+					x = 0
+					x_bits_used = 0
+				}
+			}
+			//	log.Println("ggggg", ggg)
+			//	log.Println("pppp", ppp)
+			//	log.Println("rrrrrr", rrr)
+			//	log.Println("ttttt", ttt)
 			fmt.Printf("len=%d cap=%d slice=%v\n", len(slice), cap(slice), slice)
 			fmt.Println("address of 0th element:", &slice[0])
 
-			Solar(num, slice)
+			fmt.Printf("Raw Value Hex %02x\n", slice[i]) //todo
+			//	   fmt.Printf("Raw Value Hex %02x\n", slice[2])                  	//todo
+			//	    fmt.Printf("Raw Value Hex %02x\n", slice[3])            	//todo
 
-}
-}
-}
-func Solar(num int, slice  []uint32){
-	for i := 0; i < 2 ; i++ {
-		var ttt = len(slice)
-		var arr [1500]uint32
-		copy(arr[:], slice[:ttt])
-	log.Println("400", arr[400])
-		log.Println("700", arr[700])
-		log.Println("900", arr[900])
-		log.Println("1100", arr[1100])
-		log.Println("1500", arr[1450])
-		d := fmt.Sprintf("%x", arr[700])
-		fmt.Printf("Hex conf of '%d' is '%s'\n", i, d)
-		fmt.Println(arr)
+			var Extract uint32 = slice[i] //todo
 
-		//	fmt.Println(slice[i])
+			Extract4th := make([]byte, 4)                        //todo
+			endian.Endian.PutUint32(Extract4th, uint32(Extract)) //todo
 
-	//	h := fmt.Sprintf("%x", slice[i])
-	//	fmt.Printf("Hex conf of '%d' is '%s'\n", i, h)
+			sliceExtract := make([]byte, 0)
+			sliceExtract = append(sliceExtract, Extract4th[0])
+			log.Println("sliceExtract", sliceExtract)
+			//	fmt.Println(sliceExtract)
+			//	  fmt.Printf("sliceExtract Hex %02x\n", sliceExtract[i])
 
+			//	log.Println("sliceExtract", sliceExtract)
+			fmt.Printf("BigEndian Hex-0 %02x\n", Extract4th[0]) //todo
+			//	fmt.Printf("BigEndian Hex-1 %02x\n", Extract4th[1])          	//todo
+			//	 fmt.Printf("BigEndian Hex-2 %02x\n", Extract4th[2])        	//todo
+			//	  fmt.Printf("BigEndian Hex-3 %02x\n", Extract4th[3])        	//todo
 
-
-
-
-			}
 		}
-
-
-
-
-
+	}
+}
 
 
