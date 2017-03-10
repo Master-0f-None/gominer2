@@ -20,4 +20,6 @@ const (
 	// instructions. 10 is the max supported by the hw.
 	blakeWPS     = 10
 	maxSolutions = 10
+	SHA256_TARGET_LEN = 256 / 8
+
 )

@@ -3,6 +3,7 @@ package zcash
 import (
 	"encoding/binary"
 	"log"
+//	"encoding/hex"
 )
 
 type blake2b_state_t struct {
@@ -52,6 +53,7 @@ func zcash_blake2b_init(st *blake2b_state_t, hashLength uint64, n uint32, k uint
 	st.h[6] = blake2b_iv[6] ^ binary.LittleEndian.Uint64([]byte("ZcashPoW"))
 	st.h[7] = blake2b_iv[7] ^ ((uint64(k) << 32) | uint64(n))
 	st.bytes = 0
+
 }
 
 func rotr64(a uint64, bits uint8) uint64 {
@@ -67,6 +69,7 @@ func mix(va *uint64, vb *uint64, vc *uint64, vd *uint64, x uint64, y uint64) {
 	*vd = rotr64(*vd^*va, 16)
 	*vc = *vc + *vd
 	*vb = rotr64(*vb^*vc, 63)
+//	log.Println("VA", *va)
 }
 
 /*
@@ -77,7 +80,7 @@ func mix(va *uint64, vb *uint64, vc *uint64, vd *uint64, x uint64, y uint64) {
 ** msg_len      must be 128 (<= 128 allowed only for final partial block)
 ** is_final     indicate if this is the final block
  */
-func zcash_blake2b_update(st *blake2b_state_t, msg []byte, is_final bool) {
+func zcash_blake2b_update2(st *blake2b_state_t, msg []byte, is_final bool) {
 	v := make([]uint64, 16, 16)
 	if len(msg) != 128 {
 		log.Panic("len(msg) != 128")
@@ -85,39 +88,105 @@ func zcash_blake2b_update(st *blake2b_state_t, msg []byte, is_final bool) {
 	copy(v, st.h[0:8])
 	copy(v[8:], blake2b_iv[:])
 	st.bytes += uint64(len(msg))
+
 	v[12] ^= st.bytes
+
 	if is_final {
 		v[14] ^= ^uint64(0)
 	} else {
 		v[14] ^= 0
 	}
 
+	log.Println("v[14] v[14] v[14] v[14] ", v[14] )
+
+
 	m := make([]uint64, 16, 16)
 	for i := 0; i < 8; i++ {
 		m[i] = binary.LittleEndian.Uint64(msg[i*8:])
+
 	}
+
+//	m := make([]uint64, 16, 16)
+///	for i := 0; i < 8; i++ {
+//		//	log.Println("g[i]", g[i])
+//		asInt3 := uint32(g[i])
+//		m[i] = uint64(asInt3)
+//		log.Println("m[i]",m[i])
+//
+//	}
+
+
+
 
 	for round := 0; round < blake2b_rounds; round++ {
-		s := blake2b_sigma[round]
-		mix(&v[0], &v[4], &v[8], &v[12], m[s[0]], m[s[1]])
-		mix(&v[1], &v[5], &v[9], &v[13], m[s[2]], m[s[3]])
-		mix(&v[2], &v[6], &v[10], &v[14], m[s[4]], m[s[5]])
-		mix(&v[3], &v[7], &v[11], &v[15], m[s[6]], m[s[7]])
-		mix(&v[0], &v[5], &v[10], &v[15], m[s[8]], m[s[9]])
-		mix(&v[1], &v[6], &v[11], &v[12], m[s[10]], m[s[11]])
-		mix(&v[2], &v[7], &v[8], &v[13], m[s[12]], m[s[13]])
-		mix(&v[3], &v[4], &v[9], &v[14], m[s[14]], m[s[15]])
-	}
-	for i := 0; i < 8; i++ {
-		st.h[i] ^= v[i] ^ v[i+8]
-	}
-}
+		for r := 0; r < 8; r++ {
 
-func zcash_blake2b_final(st *blake2b_state_t, out []uint8) {
-	if len(out) != 64 {
-		log.Panic("len(out) != 64:", len(out))
+
+			s := blake2b_sigma[round]
+			mix(&v[0], &v[4], &v[8], &v[12], m[s[0]], m[s[1]])
+			mix(&v[1], &v[5], &v[9], &v[13], m[s[2]], m[s[3]])
+			mix(&v[2], &v[6], &v[10], &v[14], m[s[4]], m[s[5]])
+			mix(&v[3], &v[7], &v[11], &v[15], m[s[6]], m[s[7]])
+			mix(&v[0], &v[5], &v[10], &v[15], m[s[8]], m[s[9]])
+			mix(&v[1], &v[6], &v[11], &v[12], m[s[10]], m[s[11]])
+			mix(&v[2], &v[7], &v[8], &v[13], m[s[12]], m[s[13]])
+			mix(&v[3], &v[4], &v[9], &v[14], m[s[14]], m[s[15]])
+		}
+		}
+		for i := 0; i < 8; i++ {
+//					log.Println("v[i] before", v[i])
+//					log.Println("v[i+8] before", v[i+8])
+//			log.Println("st.h[2]-before", st.h[i])
+
+			st.h[i] ^= v[i] ^ v[i+8]
+
+
+			v := uint64(st.h[i])
+
+
+
+			buf := make([]byte, 8)
+			binary.BigEndian.PutUint64(buf, v)
+			x := binary.BigEndian.Uint64(buf)
+			log.Println("buf - st.h[i]", x)
+
+
+
+
+
+//			log.Println("out[i*8:]", out[i*8:])
+//			log.Println("st.h[i]", st.h[i])
+
+			//			log.Println("v[i]-after", v[i])
+//			log.Println("v[i+8]-after", v[i+8])
+//			log.Println("st.h[2]-after", st.h[i])
+//			asInt3 := uint32(st.h[i])
+//			log.Println("asInt3", asInt3)
+//			asInt4 := uint64(asInt3)
+//			log.Println("asInt4", asInt4)
+
+	//		var src []byte = []byte("98ef1298e1f182fe")
+	//		answer := make([]byte, hex.DecodedLen(len(src)))
+	//		b, e := hex.Decode(answer, src)
+
+	//		var src []byte = []int(st.h[2])
+	//		answer := make([]byte, len(src))
+	//		binary.LittleEndian.PutUint64(answer, st.h[2])
+
+
+//			log.Println("st.h[rrr]-binary", st.h[2])
+
+		}
 	}
-	for i := 0; i < len(st.h); i++ {
-		binary.LittleEndian.PutUint64(out[i*8:], st.h[i])
-	}
-}
+
+//func zcash_blake2b_final(st *blake2b_state_t, out []uint8) {
+//	log.Println("len(out)", len(out))
+
+	//	if len(out) <= 64 {
+//		log.Panic("len(out) <= 64:", len(out))
+//	}
+//	for i := 0; i < 500; i++ {
+//		log.Println("st.h[i]", st.h[i])
+//		binary.LittleEndian.PutUint64(out[i*8:], st.h[i])
+//	}
+
