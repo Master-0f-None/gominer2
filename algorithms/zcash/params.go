@@ -12,7 +12,7 @@ const (
 	numberOfSlots                  = (1 << (approximateNumberOfElementsLog - numberOfRowsLog)) * overhead
 	slotLength                     = 32 //Length of 1 element (slot) in bytes
 	htSize                         = numberOfRows * numberOfSlots * slotLength
-	numberOfZeroBytes              = 12
+	numberOfZeroBytes              = 14
 	zcashHashLength                = 50 //Number of bytes zcash needs out of blake
 	//Number of wavefronts per SIMD for the Blake kernel.
 	// Blake is ALU-bound (beside the atomic counter being incremented) so we need

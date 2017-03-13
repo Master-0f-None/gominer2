@@ -12,7 +12,7 @@ import (
 //	"os"
 	"hash"
 	"crypto/sha256"
-	"os"
+//	"os"
 	"encoding/hex"
 )
 
@@ -163,44 +163,25 @@ func (miner *singleDeviceMiner) mine() {
 	defer bufferRowCounters[0].Release()
 	bufferRowCounters[1] = mining.CreateEmptyBuffer(context, cl.MemReadWrite, numberOfRows)
 	defer bufferRowCounters[1].Release()
-
 	for {
 		start := time.Now()
 		target, header, deprecationChannel, job, err := miner.Client.GetHeaderForWork()
-	//	log.Println("///////////////////////GetHeaderForWork//////////////////////////////////////////////////")
-	//	log.Println("target", target )
-	//	log.Println("deprecationChannel", deprecationChannel )
-	//	log.Println("header", header )
-	//	log.Println("job", job )
 		if err != nil {
 			log.Println("ERROR fetching work -", err)
+		//	msg = <-deprecationChannel
 			time.Sleep(1000 * time.Millisecond)
 			continue
 		}
-		continueMining := true
-		if !continueMining {
-			log.Println("Halting miner ", miner.MinerID)
-			break
-		}
-	//	log.Println(target, header, deprecationChannel, job)
-	//	log.Println("target", target)
-	//	log.Println("Header 2#####2", header)
-		log.Println("deprecationChannel",  deprecationChannel)
-	//	log.Println("Header 3#job#3 ", job)				//todo REMEMBER Reserved "0"'s missing here
-
-		// Process first BLAKE2b-400 block
+var ggg = 1
+if ggg > 2 {
+	log.Println("deprecationChannel", deprecationChannel)
+}
 		blake := &blake2b_state_t{}
 
-	//	fmt.Printf("BigEndian Hex %02x\n", header)
 
 		zcash_blake2b_init(blake, zcashHashLength, equihashParamN, equihashParamK)
 		zcash_blake2b_update_2(blake, false, header[:128])
 
-//		for r := 0; r < 8; r++ {
-//			log.Println("blake2 -r", blake.h[r])
-//		}
-//		log.Println("Header 4#128#4 ", header[:128] )
-//		log.Println("Header  ", header )
 
 		bufferBlake, err := context.CreateBufferUnsafe(cl.MemReadOnly|cl.MemCopyHostPtr, 64, unsafe.Pointer(&blake.h[0]))
 		if err != nil {
@@ -250,7 +231,9 @@ func (miner *singleDeviceMiner) mine() {
 		bufferBlake.Release()
 	//	log.Println("Solutions found:", solutionsFound)
 
-		hashRate := float64(solutionsFound) / (time.Since(start).Seconds() * 1000000)
+		hashRate := float64(solutionsFound) / (time.Since(start).Seconds() * 100000000)
+
+
 		miner.HashRateReports <- &mining.HashRateReport{MinerID: miner.MinerID, HashRate: hashRate}
 	}
 
@@ -280,6 +263,7 @@ func (miner *singleDeviceMiner) verifySolutions(commandQueue *cl.CommandQueue, b
 
 	}
 	miner.SubmitSolution(Sols, solutionsFound, header, target, job)
+
 
 	return
 
@@ -349,126 +333,116 @@ func sortPair(a, b []uint32) {
 }
 //todo: changed
 //todo 				miner.SubmitSolutionZEC(sols, solutionsFound, header, target, job)
-
-
+var xxx uint32
+var jj []byte
 func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound int, header []byte, target []byte, job interface{}) {
-// log.Println("solutions found ", solutionsFound )
-//	log.Println("header ",header )
+	// log.Println("solutions found ", solutionsFound )
+	//	log.Println("header ",header )
 
-var OldHeader []byte
 	for i := 0; i < int(Solutions.nr); i++ {
-				if Solutions.valid[i] > 0 {
+		if Solutions.valid[i] > 0 {
 
+			var inputs= Solutions.Finalz
 
-					var inputs = Solutions.Finalz
+			//		var inputs= [16]uint32{3257, 933560, 120482, 855408, 926622, 2063223, 1493414, 2060455, 128849, 1486455, 216187, 1287572, 308040, 1320625, 2022698, 2085613}
 
+			//		var n uint32 = 8
 
-					//		var inputs= [16]uint32{3257, 933560, 120482, 855408, 926622, 2063223, 1493414, 2060455, 128849, 1486455, 216187, 1287572, 308040, 1320625, 2022698, 2085613}
+			var n uint32 = 512
 
-					//		var n uint32 = 8
+			var byte_pos uint32 = 0
+			var bits_left uint32 = prefix + 1
+			var x uint32 = 0
+			var x_bits_used uint32 = 0
+			slice := make([]uint32, 0)
+			const MaxUint= ^uint32(0)
 
-					var n uint32 = 512
+			for ; byte_pos < n; {
 
-					var byte_pos uint32 = 0
-					var bits_left uint32 = prefix + 1
-					var x uint32 = 0
-					var x_bits_used uint32 = 0
-					slice := make([]uint32, 0)
-					const MaxUint = ^uint32(0)
+				if bits_left >= 8-x_bits_used {
 
-					for ; byte_pos < n; {
+					x |= inputs[byte_pos] >> (bits_left - 8 + x_bits_used)
+					bits_left -= 8 - x_bits_used
+					x_bits_used = 8
 
-						if bits_left >= 8-x_bits_used {
+				} else if bits_left > 0 {
+					var mask uint32 = ^(MaxUint << (8 - x_bits_used))
+					mask = ((^mask) >> bits_left) & mask
+					x |= (inputs[byte_pos] << (8 - x_bits_used - bits_left)) & mask
+					x_bits_used += bits_left
+					bits_left = 0
+				} else if bits_left <= 0 {
+					byte_pos++
+					bits_left = prefix + 1
 
-							x |= inputs[byte_pos] >> (bits_left - 8 + x_bits_used)
-							bits_left -= 8 - x_bits_used
-							x_bits_used = 8
-
-						} else if bits_left > 0 {
-							var mask uint32 = ^(MaxUint << (8 - x_bits_used))
-							mask = ((^mask) >> bits_left) & mask
-							x |= (inputs[byte_pos] << (8 - x_bits_used - bits_left)) & mask
-							x_bits_used += bits_left
-							bits_left = 0
-						} else if bits_left <= 0 {
-							byte_pos++
-							bits_left = prefix + 1
-
-						}
-						if x_bits_used == 8 {
-							slice = append(slice, x)
-							x = 0
-							x_bits_used = 0
-						}
-					}
-
-	//				log.Println("66666666 Store Encoded Solution DONE 666666666666666")
-					sliceExtract := make([]byte, 0)
-
-					for v := range slice {
-						var Extract uint32 = slice[v]                        //todo
-						Extract4th := make([]byte, 4)                        //todo
-						endian.Endian.PutUint32(Extract4th, uint32(Extract)) //todo
-						sliceExtract = append(sliceExtract, Extract4th[0])
-
-						}
-
-
-
-
-					Sha256_Header_Sol := make([]uint8, len(header))
-					copy(Sha256_Header_Sol, header)
-					var SolLength = []uint8("\xfd\x40\x05")
-					var Solz = sliceExtract
-					var Sha256_Submit []uint8
-
-
-
-					Sha256_Submit = append(Sha256_Submit, Sha256_Header_Sol...)
-					Sha256_Submit = append(Sha256_Submit, SolLength...)
-					Sha256_Submit = append(Sha256_Submit, Solz...)
-
-
-					FinalSol := make([]uint8, len(SolLength))
-					copy(FinalSol, SolLength)
-					FinalSol = append(FinalSol, Solz...)
-					FinalSolHex := hex.EncodeToString(FinalSol)
-
-					Sha256 := DoubleSHA(Sha256_Submit)
-
-					Sha256Rev := reverse(Sha256)
-
-
-					Target_Compare := cmp_target_256(target, Sha256Rev)
-
-
-					if Target_Compare < 0 {
-
-			//			log.Println("Hash is above target")
-						return
-					}else {
-						log.Println("Hash is under target")
-						CompareSlices(header[113:140], OldHeader)
-
-						go func() {
-				//			log.Println("target target target target", target)
-				//			fmt.Printf("target   %x\n", target)
-				//			log.Println("attempt attempt attempt attempt", attempt)
-				//			fmt.Printf("yippee   %x\n", attempt)
-							if e := miner.Client.SubmitSolution(FinalSolHex , solutionsFound, header, target, job); e != nil {
-								fmt.Printf("oooooooooooooo-header-oooooooooooooooo   %x\n  ", header)
-								fmt.Printf("nnnnnnnnnnnnnnn-Sha256_Header_Sol-nnnnnnnnnnnn  %x\n", Sha256_Header_Sol)
-								fmt.Printf("ppppppppppp-FinalSol-ppppppppppppppp    %x\n", FinalSol)
-								log.Println(miner.MinerID, "- Error submitting solution -", e)
-								os.Exit(3)
-								OldHeader = header[113:140]
-
-							}
-						}()
-
-					}
 				}
+				if x_bits_used == 8 {
+					slice = append(slice, x)
+					x = 0
+					x_bits_used = 0
+				}
+			}
 
+			//				log.Println("66666666 Store Encoded Solution DONE 666666666666666")
+			sliceExtract := make([]byte, 0)
+
+			for v := range slice {
+				var Extract uint32 = slice[v]                        //todo
+				Extract4th := make([]byte, 4)                        //todo
+				endian.Endian.PutUint32(Extract4th, uint32(Extract)) //todo
+				sliceExtract = append(sliceExtract, Extract4th[0])
+
+			}
+
+			Sha256_Header_Sol := make([]uint8, len(header))
+			copy(Sha256_Header_Sol, header)
+			var SolLength= []uint8("\xfd\x40\x05")
+			var Solz= sliceExtract
+			var Sha256_Submit []uint8
+
+			Sha256_Submit = append(Sha256_Submit, Sha256_Header_Sol...)
+			Sha256_Submit = append(Sha256_Submit, SolLength...)
+			Sha256_Submit = append(Sha256_Submit, Solz...)
+
+			FinalSol := make([]uint8, len(SolLength))
+			copy(FinalSol, SolLength)
+			FinalSol = append(FinalSol, Solz...)
+			FinalSolHex := hex.EncodeToString(FinalSol)
+
+			//	log.Println("target target target target", FinalSolHex)
+
+			Sha256 := DoubleSHA(Sha256_Submit)
+
+			Sha256Rev := reverse(Sha256)
+
+			Target_Compare := cmp_target_256(target, Sha256Rev)
+xxx = xxx + 1
+			log.Println("counter", xxx)
+			//	Sha256Header := DoubleSHA(header[113:140])
+			//	Sha256JJ := DoubleSHA(jj)
+			//	Header_Compare := cmp_target_256(Sha256Header, Sha256JJ)
+
+			if Target_Compare < 0 {
+
+				//		log.Println("Hash is above target")
+				return
+			} else {
+				log.Println("Hash is under target")
+
+				go func() {
+					copy(jj, header[113:140])
+					log.Println("attempt attempt attempt attempt")
+					if e := miner.Client.SubmitSolution(FinalSolHex, solutionsFound, header, target, job); e != nil {
+						log.Println(miner.MinerID, "- Error submitting solution -", e)
+					//	os.Exit(3)
+						//				OldHeader = header[113:140]
+
+					}
+				}()
+return
+			}
+
+		}
 	}
 }
 //	var FinalHeader = []uint8("\xfd\x40\x05")

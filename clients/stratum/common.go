@@ -39,6 +39,11 @@ func (en *ExtraNonce2) Bytes() (b []byte) {
 //Increment increases the nonce with 1, an error is returned if the resulting is value is bigger than possible given the size
 func (en *ExtraNonce2) Increment() (err error) {
 	en.Value++
+//	if en.Value < 1 {
+//		en.Value = en.Value + 5555
+//	}else {
+//		en.Value++
+//	}
 	//TODO: check if does not overflow compared to the allowed size
 	return
 }

@@ -27,6 +27,8 @@ func main() {
 	miningAlgorithm := flag.String("algo", "sia", "Mining algorithm, can be `sia` or `zcash`")
 	host := flag.String("url", "localhost:9980", "daemon or server host and port, for stratum servers, use `stratum+tcp://<host>:<port>`")
 	pooluser := flag.String("user", "payoutaddress.rigname", "username, most stratum servers take this in the form [payoutaddress].[rigname]")
+	password := flag.String("pass", "x", "password, most stratum servers take this in the form [x]")
+
 	excludedGPUs := flag.String("E", "", "Exclude GPU's: comma separated list of devicenumbers")
 	flag.Parse()
 
@@ -73,12 +75,12 @@ func main() {
 	}
 
 	nrOfMiningDevices := len(miningDevices)
-	var hashRateReportsChannel = make(chan *mining.HashRateReport, nrOfMiningDevices*10)
+	var hashRateReportsChannel = make(chan *mining.HashRateReport, nrOfMiningDevices*3)
 
 	var miner mining.Miner
 	if *miningAlgorithm == "zcash" {
 		log.Println("Starting zcash mining")
-		c := zcash.NewClient(*host, *pooluser)
+		c := zcash.NewClient(*host, *pooluser, *password)
 
 		miner = &zcash.Miner{
 			ClDevices:       miningDevices,

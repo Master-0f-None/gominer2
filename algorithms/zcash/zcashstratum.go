@@ -32,7 +32,7 @@ type stratumJob struct {
 type StratumClient struct {
 	connectionstring string
 	User             string
-
+	Pass 			string
 	mutex           sync.Mutex // protects following
 	stratumclient   *stratum.Client
 	extranonce1     []byte
@@ -42,11 +42,11 @@ type StratumClient struct {
 	clients.BaseClient
 }
 // NewClient creates a new StratumClient given a '[stratum+tcp://]host:port' connectionstring
-func NewClient(connectionstring, pooluser string) (sc clients.Client) {
+func NewClient(connectionstring, pooluser string, pass string) (sc clients.Client) {
 	if strings.HasPrefix(connectionstring, "stratum+tcp://") {
 		connectionstring = strings.TrimPrefix(connectionstring, "stratum+tcp://")
 	}
-	  sc = &StratumClient{connectionstring: connectionstring, User: pooluser}
+	  sc = &StratumClient{connectionstring: connectionstring, User: pooluser, Pass: pass}
 
 	return
 }
@@ -212,7 +212,6 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 	defer sc.mutex.Unlock()
 	job = sc.currentJob
 
-
 	if sc.currentJob.JobID == "" {
 		err = errors.New("No job received from stratum server yet")
 		return
@@ -266,10 +265,10 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 
 //	log.Println("END - sc.extranonce1 - #3", sc.extranonce1)				//todo
 
-
 //	log.Println("End sc.currentJob.ExtraNonce2 - ",	sc.currentJob.ExtraNonce2)				//todo
 
 	sc.currentJob.ExtraNonce2.Increment()
+
 	// Append the 12 `0` bytes
 	for i := 0; i < numberOfZeroBytes; i++ {
 		header = append(header, 0)
@@ -288,6 +287,7 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 	//TODO: extract nonce and equihash solution from the header
 	//TODO: nonce := hex.EncodeToString(header[32:40])
 	//log.Println("/////////////////////////////////////////////////////////////////////////")
+var zzz uint32
 
 func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, OrganizedHeader []byte, target []byte, job interface{}) (err error) {
 	//	log.Println("equihashsolution", equihashsolution)
@@ -311,6 +311,8 @@ func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, Organi
 */
 
 
+
+
 //	target7 := reverse(OrganizedHeader[113:140])
 //	fmt.Printf("target7   %02x\n", target7)
 	encodedExtraNonce2 := hex.EncodeToString(OrganizedHeader[113:140])
@@ -328,13 +330,17 @@ func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, Organi
 		c := sc.stratumclient
 		sc.mutex.Unlock()
 		stratumUser := sc.User
+
 //		log.Println("stratumUser", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
 
+		zzz = zzz +1
+	log.Println("yippee", zzz)
 		_, err = c.Call("mining.submit", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
 		if err != nil {
 			log.Println("FUCK FUCK FUCK FUCK", stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution)
 			return
 		}
+
 		return
 	}
 
