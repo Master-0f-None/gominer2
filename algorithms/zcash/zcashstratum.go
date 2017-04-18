@@ -9,7 +9,7 @@ import (
 	"sync"
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/clients/stratum"
-//	"github.com/kilo17/GoEndian"
+	//	"github.com/kilo17/GoEndian"
 
 )
 
@@ -46,7 +46,7 @@ func NewClient(connectionstring, pooluser string, pass string) (sc clients.Clien
 	if strings.HasPrefix(connectionstring, "stratum+tcp://") {
 		connectionstring = strings.TrimPrefix(connectionstring, "stratum+tcp://")
 	}
-	  sc = &StratumClient{connectionstring: connectionstring, User: pooluser, Pass: pass}
+	sc = &StratumClient{connectionstring: connectionstring, User: pooluser, Pass: pass}
 
 	return
 }
@@ -143,7 +143,7 @@ func (sc *StratumClient) subscribeToStratumJobNotifications() {
 			log.Println("ERROR Wrong number of parameters supplied by stratum server")
 			return
 		}
-log.Println("params-1", params)
+		log.Println("params-1", params)
 		sj := stratumJob{}
 
 		sj.ExtraNonce2.Size = sc.extranonce2Size
@@ -171,10 +171,10 @@ log.Println("params-1", params)
 			log.Println("ERROR Wrong merkleroot parameter supplied by stratum server")
 			return
 		}
-	//	if sj.Reserved, err = stratum.HexStringToBytes(params[5]); err != nil {
-	//		log.Println("ERROR Wrong reserved parameter supplied by stratum server")
-	//		return
-	//	}
+		//	if sj.Reserved, err = stratum.HexStringToBytes(params[5]); err != nil {
+		//		log.Println("ERROR Wrong reserved parameter supplied by stratum server")
+		//		return
+		//	}
 		if sj.Time, err = stratum.HexStringToBytes(params[5]); err != nil {
 			log.Println("ERROR Wrong time parameter supplied by stratum server")
 			return
@@ -188,8 +188,8 @@ log.Println("params-1", params)
 			log.Println("ERROR Wrong clean_jobs parameter supplied by stratum server")
 			return
 		}
-//		log.Println("params-2", params)					//todo
-//		log.Println(" After Hex - sc.extranonce1", sc.extranonce1)	//todo
+		//		log.Println("params-2", params)					//todo
+		//		log.Println(" After Hex - sc.extranonce1", sc.extranonce1)	//todo
 
 		sc.addNewStratumJob(sj)
 	})
@@ -224,69 +224,69 @@ func (sc *StratumClient) GetHeaderForWork() (target, header []byte, deprecationC
 
 	header = make([]byte, 0, 140)
 	header = append(header, sc.currentJob.Version...)    // 4 bytes
-//	fmt.Printf("Step 1 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
+	//	fmt.Printf("Step 1 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
 
 	header = append(header, sc.currentJob.PrevHash...)   // 32 bytes = 36
-//	fmt.Printf("Step 2 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
+	//	fmt.Printf("Step 2 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
 
 	header = append(header, sc.currentJob.MerkleRoot...) // 32 bytes = 68
-//	fmt.Printf("Step 3 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
+	//	fmt.Printf("Step 3 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
 
-//	var y []byte = 00000000000000000000000000000000
-//	sc.currentJob.Reserved =
+	//	var y []byte = 00000000000000000000000000000000
+	//	sc.currentJob.Reserved =
 
 	sc.currentJob.Reserved = header[68:100]
 
 	header = append(header, sc.currentJob.Reserved...)   // 32 bytes = 100   todo - removed and replaced to insert bytes
 
-//	fmt.Printf("Step 4 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
+	//	fmt.Printf("Step 4 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
 
 	header = append(header, sc.currentJob.Time...)       // 4 bytes = 104
-//	fmt.Printf("Step 5 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
+	//	fmt.Printf("Step 5 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
 
 	header = append(header, sc.currentJob.Bits...)       // 4 bytes = 108
-//	fmt.Printf("Step 6 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
-//	bits := hex.EncodeToString(sc.currentJob.Bits)
-//	log.Println("sc.currentJob.Bits...", bits)
+	//	fmt.Printf("Step 6 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
+	//	bits := hex.EncodeToString(sc.currentJob.Bits)
+	//	log.Println("sc.currentJob.Bits...", bits)
 
 	//Add a 32 bytes nonce
 	header = append(header, sc.extranonce1...)		// X bytes approx. 118
-//	fmt.Printf("Step 7 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
-//	extranonce11 := hex.EncodeToString(sc.extranonce1)
-//	log.Println("extranonce11", extranonce11)
+	//	fmt.Printf("Step 7 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
+	//	extranonce11 := hex.EncodeToString(sc.extranonce1)
+	//	log.Println("extranonce11", extranonce11)
 
 
 
 
 	header = append(header, sc.currentJob.ExtraNonce2.Bytes()...) 	// X bytes approx. 128
-//	fmt.Printf("Step 8 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
-//	ExtraNonce22 := hex.EncodeToString(sc.currentJob.ExtraNonce2.Bytes())
-//	log.Println("ExtraNonce22", ExtraNonce22)
+	//	fmt.Printf("Step 8 - len=%d cap=%d slice=%v\n", len(header), cap(header), header)
+	//	ExtraNonce22 := hex.EncodeToString(sc.currentJob.ExtraNonce2.Bytes())
+	//	log.Println("ExtraNonce22", ExtraNonce22)
 
-//	log.Println("END - sc.extranonce1 - #3", sc.extranonce1)				//todo
+	//	log.Println("END - sc.extranonce1 - #3", sc.extranonce1)				//todo
 
-//	log.Println("End sc.currentJob.ExtraNonce2 - ",	sc.currentJob.ExtraNonce2)				//todo
+	//	log.Println("End sc.currentJob.ExtraNonce2 - ",	sc.currentJob.ExtraNonce2)				//todo
 
 	sc.currentJob.ExtraNonce2.Increment()
 
 	// Append the 12 `0` bytes
 	for i := 0; i < numberOfZeroBytes; i++ {
 		header = append(header, 0)
-//		log.Println("End sc.currentJob.ExtraNonce2 hhhhhhhh- ",	sc.currentJob.ExtraNonce2)				//todo
+		//		log.Println("End sc.currentJob.ExtraNonce2 hhhhhhhh- ",	sc.currentJob.ExtraNonce2)				//todo
 
 
 	}
-//	fmt.Printf("Header 1#St9#1 - len=%d cap=%d slice=%v\n", len(header), cap(header), header) // X bytes approx. 140
+	//	fmt.Printf("Header 1#St9#1 - len=%d cap=%d slice=%v\n", len(header), cap(header), header) // X bytes approx. 140
 	return
 
 }
 
 
 
-	//SubmitHeader reports a solved header
-	//TODO: extract nonce and equihash solution from the header
-	//TODO: nonce := hex.EncodeToString(header[32:40])
-	//log.Println("/////////////////////////////////////////////////////////////////////////")
+//SubmitHeader reports a solved header
+//TODO: extract nonce and equihash solution from the header
+//TODO: nonce := hex.EncodeToString(header[32:40])
+//log.Println("/////////////////////////////////////////////////////////////////////////")
 var zzz uint32
 
 func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, OrganizedHeader []byte, target []byte, job interface{}) (err error) {
@@ -297,52 +297,51 @@ func (sc *StratumClient) SubmitSolution(final string, solutionsFound int, Organi
 
 	//todo``````````````````````````````````````````````````````````````````````````````````````````````````````````
 
-//	var LenX1= len(sc.extranonce1)
+	//	var LenX1= len(sc.extranonce1)
 
 	//todo``````````````````````````````````````````````````````````````````````````````````````````````````````````
-/*
-		var LenX2= len(sj.ExtraNonce2.Bytes())
-		var LenLeft= 32 - (LenX2 + LenX1)
-		slice1 := make([]byte, LenX2)
-		copy(slice1, sj.ExtraNonce2.Bytes())
-		slice2 := make([]byte, LenLeft)
-	slice1 = append(slice1, slice2...)
-
-*/
-
+	/*
+			var LenX2= len(sj.ExtraNonce2.Bytes())
+			var LenLeft= 32 - (LenX2 + LenX1)
+			slice1 := make([]byte, LenX2)
+			copy(slice1, sj.ExtraNonce2.Bytes())
+			slice2 := make([]byte, LenLeft)
+		slice1 = append(slice1, slice2...)
+	*/
 
 
 
-//	target7 := reverse(OrganizedHeader[113:140])
-//	fmt.Printf("target7   %02x\n", target7)
-	encodedExtraNonce2 := hex.EncodeToString(OrganizedHeader[113:140])
 
-//	encodedExtraNonce2 := hex.EncodeToString(header[113:140])
+	//	target7 := reverse(OrganizedHeader[113:140])
+	//	fmt.Printf("target7   %02x\n", target7)
+	encodedExtraNonce2 := hex.EncodeToString(OrganizedHeader[120:140])
+
+	//	encodedExtraNonce2 := hex.EncodeToString(header[113:140])
 	log.Println("encodedExtraNonce2", encodedExtraNonce2)
 
 
 	equihashsolution := final
 
 	nTime := hex.EncodeToString(sj.Time)
-		log.Println("nTime", nTime)
+	log.Println("nTime", nTime)
 
-		sc.mutex.Lock()
-		c := sc.stratumclient
-		sc.mutex.Unlock()
-		stratumUser := sc.User
+	sc.mutex.Lock()
+	c := sc.stratumclient
+	sc.mutex.Unlock()
+	stratumUser := sc.User
 
-//		log.Println("stratumUser", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
+	//		log.Println("stratumUser", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
 
-		zzz = zzz +1
+	zzz = zzz +1
 	log.Println("yippee", zzz)
-		_, err = c.Call("mining.submit", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
-		if err != nil {
-			log.Println("FUCK FUCK FUCK FUCK", stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution)
-			return
-		}
-
+	_, err = c.Call("mining.submit", []string{stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution})
+	if err != nil {
+		log.Println("FUCK FUCK FUCK FUCK", stratumUser, sj.JobID, nTime, encodedExtraNonce2, equihashsolution)
 		return
 	}
+
+	return
+}
 
 
 
@@ -353,5 +352,3 @@ func reverse2(numbers []uint8) []uint8{
 	}
 	return newNumbers
 }
-
-

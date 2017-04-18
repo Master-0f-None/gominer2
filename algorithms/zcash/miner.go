@@ -9,10 +9,10 @@ import (
 	"github.com/kilo17/gominer2/clients"
 	"github.com/kilo17/gominer2/mining"
 	"github.com/kilo17/GoEndian"
-//	"os"
+	//	"os"
 	"hash"
 	"crypto/sha256"
-//	"os"
+	//	"os"
 	"encoding/hex"
 )
 
@@ -168,14 +168,14 @@ func (miner *singleDeviceMiner) mine() {
 		target, header, deprecationChannel, job, err := miner.Client.GetHeaderForWork()
 		if err != nil {
 			log.Println("ERROR fetching work -", err)
-		//	msg = <-deprecationChannel
+			//	msg = <-deprecationChannel
 			time.Sleep(1000 * time.Millisecond)
 			continue
 		}
-var ggg = 1
-if ggg > 2 {
-	log.Println("deprecationChannel", deprecationChannel)
-}
+		var ggg = 1
+		if ggg > 2 {
+			log.Println("deprecationChannel", deprecationChannel)
+		}
 		blake := &blake2b_state_t{}
 
 
@@ -229,7 +229,7 @@ if ggg > 2 {
 		solutionsFound := miner.verifySolutions(commandQueue, bufferSolutions, header, target, job)
 
 		bufferBlake.Release()
-	//	log.Println("Solutions found:", solutionsFound)
+		//	log.Println("Solutions found:", solutionsFound)
 
 		hashRate := float64(solutionsFound) / (time.Since(start).Seconds() * 100000000)
 
@@ -256,10 +256,10 @@ func (miner *singleDeviceMiner) verifySolutions(commandQueue *cl.CommandQueue, b
 	}
 	for i := 0; uint32(i) < Sols.nr; i++ {
 
-	solutionsFound += miner.verifySolution(Sols, i)
-	//	log.Println("solutionsFound", solutionsFound)
-	//	log.Println("Sols", Sols)
-	//	log.Println("iiiii", i)
+		solutionsFound += miner.verifySolution(Sols, i)
+		//	log.Println("solutionsFound", solutionsFound)
+		//	log.Println("Sols", Sols)
+		//	log.Println("iiiii", i)
 
 	}
 	miner.SubmitSolution(Sols, solutionsFound, header, target, job)
@@ -416,30 +416,38 @@ func (miner *singleDeviceMiner) SubmitSolution(Solutions *Solst, solutionsFound 
 			Sha256Rev := reverse(Sha256)
 
 			Target_Compare := cmp_target_256(target, Sha256Rev)
-xxx = xxx + 1
-			log.Println("counter", xxx)
-			//	Sha256Header := DoubleSHA(header[113:140])
-			//	Sha256JJ := DoubleSHA(jj)
-			//	Header_Compare := cmp_target_256(Sha256Header, Sha256JJ)
+			//xxx = xxx + 1
+
+			Sha256Header := DoubleSHA(header[113:140])
+			Sha256JJ := DoubleSHA(jj)
+			Header_Compare := cmp_target_256(Sha256Header, Sha256JJ)
+		//	log.Println("Header_Compare", Header_Compare)
+
+		//	log.Println("Sha256Rev", Sha256Rev)
+		//	log.Println("target", target)
 
 			if Target_Compare < 0 {
-
 				//		log.Println("Hash is above target")
 				return
-			} else {
+			}
+			if Target_Compare > 0 && Header_Compare != 0{
 				log.Println("Hash is under target")
+				log.Println("Target_Compare", Target_Compare)
+				log.Println("Header_Compare", Header_Compare)
+		//		log.Println("Sha256Rev", Sha256Rev)
 
+		//		log.Println("Target_Compare", Target_Compare)
 				go func() {
 					copy(jj, header[113:140])
 					log.Println("attempt attempt attempt attempt")
 					if e := miner.Client.SubmitSolution(FinalSolHex, solutionsFound, header, target, job); e != nil {
 						log.Println(miner.MinerID, "- Error submitting solution -", e)
-					//	os.Exit(3)
-						//				OldHeader = header[113:140]
+					//		os.Exit(3)
+					//	OldHeader = header[113:140]
 
 					}
 				}()
-return
+				return
 			}
 
 		}
@@ -455,17 +463,17 @@ func OrderHeader(header []byte)  []byte {
 	//hashReverse := reverse(hash)
 	var zeros = header[128:140] // 12
 
-//	fmt.Printf("header %02x\n", header)
-//	fmt.Printf("Given %02x\n", given)
-//	fmt.Printf("zeros %02x\n", zeros)
-//	fmt.Printf("hash %02x\n", hash)
-//	fmt.Printf("hashReverse %02x\n", hashReverse)
+	//	fmt.Printf("header %02x\n", header)
+	//	fmt.Printf("Given %02x\n", given)
+	//	fmt.Printf("zeros %02x\n", zeros)
+	//	fmt.Printf("hash %02x\n", hash)
+	//	fmt.Printf("hashReverse %02x\n", hashReverse)
 
 
 	FinalHeader = append(FinalHeader, given...)
 	FinalHeader = append(FinalHeader, zeros...)
 	FinalHeader = append(FinalHeader, hash...)
-//	fmt.Printf("FinalHeader %02x\n", FinalHeader)
+	//	fmt.Printf("FinalHeader %02x\n", FinalHeader)
 
 
 	return FinalHeader
@@ -492,17 +500,17 @@ func DoubleSHA(b []byte)([]byte){
 
 
 func cmp_target_256(a []uint8, b []uint8) int32 {
-//	log.Println("a", a)
-//	log.Println("b", b)
+	//	log.Println("a", a)
+	//	log.Println("b", b)
 
-//	for i := SHA256_TARGET_LEN - 1; i >= 0; i-- {
+	//	for i := SHA256_TARGET_LEN - 1; i >= 0; i-- {
 	for i := 0; i < 32; i++ {
 		if a[i] != b[i] {
 			var ddd = int32(a[i]) - int32(b[i])
 
 
 
-		//	log.Println("ddd", ddd)
+			//	log.Println("ddd", ddd)
 
 			return ddd
 		}
